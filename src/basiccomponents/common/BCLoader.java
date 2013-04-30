@@ -23,7 +23,7 @@ public class BCLoader
 	@Instance(BasicComponents.CHANNEL)
 	public static BCLoader instance;
 
-	@SidedProxy(clientSide = "universalelectricity.components.client.ClientProxy", serverSide = "universalelectricity.components.common.CommonProxy")
+	@SidedProxy(clientSide = "basiccomponents.client.ClientProxy", serverSide = "basiccomponents.common.CommonProxy")
 	public static CommonProxy proxy;
 
 	@Mod.Metadata(BasicComponents.CHANNEL)
