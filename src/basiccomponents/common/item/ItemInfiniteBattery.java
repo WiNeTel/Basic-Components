@@ -15,7 +15,7 @@ import universalelectricity.core.item.IItemElectric;
  * @author Calclavia
  * 
  */
-public class ItemInfiniteBattery extends ItemBC implements IItemElectric
+public class ItemInfiniteBattery extends ItemBase implements IItemElectric
 {
 	public ItemInfiniteBattery(int id)
 	{

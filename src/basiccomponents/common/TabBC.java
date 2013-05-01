@@ -2,6 +2,7 @@ package basiccomponents.common;
 
 import basiccomponents.common.block.BlockBasicMachine;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 public class TabBC extends CreativeTabs
@@ -14,6 +15,6 @@ public class TabBC extends CreativeTabs
 	@Override
 	public ItemStack getIconItemStack()
 	{
-		return new ItemStack(BasicComponents.blockMachine, 1, BlockBasicMachine.BATTERY_BOX_METADATA);
+		return new ItemStack(Item.appleGold);
 	}
 }

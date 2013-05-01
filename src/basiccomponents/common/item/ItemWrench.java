@@ -7,13 +7,12 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeDirection;
 import universalelectricity.prefab.implement.IToolConfigurator;
 
-public class ItemWrench extends ItemBC implements IToolConfigurator
+public class ItemWrench extends ItemBase implements IToolConfigurator
 {
 	public ItemWrench(int id, int texture)
 	{
 		super("wrench", id);
 		this.setMaxStackSize(1);
-		this.setMaxDamage(5000);
 	}
 
 	@Override
@@ -25,13 +24,7 @@ public class ItemWrench extends ItemBC implements IToolConfigurator
 	@Override
 	public void wrenchUsed(EntityPlayer entityPlayer, int x, int y, int z)
 	{
-		if (entityPlayer.getCurrentEquippedItem() != null)
-		{
-			if (entityPlayer.getCurrentEquippedItem().getItem() instanceof ItemWrench)
-			{
-				entityPlayer.getCurrentEquippedItem().damageItem(1, entityPlayer);
-			}
-		}
+
 	}
 
 	@Override
@@ -63,7 +56,6 @@ public class ItemWrench extends ItemBC implements IToolConfigurator
 	public boolean onItemUse(ItemStack par1ItemStack, EntityPlayer player, World world, int x, int y, int z, int side, float hitX, float hitY, float hitZ)
 	{
 		return false;
-		// return true;
 	}
 
 	@Override

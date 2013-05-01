@@ -1,12 +1,31 @@
 package basiccomponents.common;
 
+import java.io.File;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 
+import net.minecraft.block.Block;
+import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.FurnaceRecipes;
+import net.minecraftforge.common.Configuration;
+import net.minecraftforge.oredict.OreDictionary;
+import net.minecraftforge.oredict.ShapedOreRecipe;
+import net.minecraftforge.oredict.ShapelessOreRecipe;
+import universalelectricity.core.UniversalElectricity;
+import universalelectricity.core.item.ElectricItemHelper;
+import universalelectricity.core.item.ItemElectric;
+import universalelectricity.prefab.RecipeHelper;
+import universalelectricity.prefab.TranslationHelper;
+import universalelectricity.prefab.ore.OreGenBase;
+import universalelectricity.prefab.ore.OreGenReplaceStone;
+import universalelectricity.prefab.ore.OreGenerator;
 import basiccomponents.client.RenderCopperWire;
 import basiccomponents.common.block.BlockBCOre;
 import basiccomponents.common.block.BlockBasicMachine;
 import basiccomponents.common.block.BlockCopperWire;
-import basiccomponents.common.item.ItemBC;
+import basiccomponents.common.item.ItemBase;
 import basiccomponents.common.item.ItemBattery;
 import basiccomponents.common.item.ItemBlockBCOre;
 import basiccomponents.common.item.ItemBlockBasicMachine;
@@ -20,25 +39,12 @@ import basiccomponents.common.tileentity.TileEntityBatteryBox;
 import basiccomponents.common.tileentity.TileEntityCoalGenerator;
 import basiccomponents.common.tileentity.TileEntityCopperWire;
 import basiccomponents.common.tileentity.TileEntityElectricFurnace;
-
-import net.minecraft.block.Block;
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.FurnaceRecipes;
-import net.minecraftforge.oredict.OreDictionary;
-import net.minecraftforge.oredict.ShapedOreRecipe;
-import net.minecraftforge.oredict.ShapelessOreRecipe;
-import universalelectricity.core.UniversalElectricity;
-import universalelectricity.core.item.ElectricItemHelper;
-import universalelectricity.core.item.ItemElectric;
-import universalelectricity.prefab.RecipeHelper;
-import universalelectricity.prefab.TranslationHelper;
-import universalelectricity.prefab.ore.OreGenBase;
-import universalelectricity.prefab.ore.OreGenReplaceStone;
-import universalelectricity.prefab.ore.OreGenerator;
 import cpw.mods.fml.client.registry.ClientRegistry;
+import cpw.mods.fml.common.FMLLog;
+import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.registry.GameRegistry;
+import cpw.mods.fml.relauncher.ReflectionHelper;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -56,7 +62,15 @@ public class BasicComponents
 
 	public static final String RESOURCE_PATH = "/mods/basiccomponents/";
 
+	/**
+	 * The Universal Electricity configuration file.
+	 */
+	public static final Configuration CONFIGURATION = new Configuration(new File(Loader.instance().getConfigDir(), "BasicComponents.cfg"));
+
 	public static CreativeTabs TAB;
+
+	@SidedProxy(clientSide = "basiccomponents.client.ClientProxy", serverSide = "basiccomponents.common.CommonProxy")
+	public static CommonProxy proxy;
 
 	public static final String TEXTURE_DIRECTORY = RESOURCE_PATH + "textures/";
 	public static final String GUI_DIRECTORY = TEXTURE_DIRECTORY + "gui/";
@@ -69,32 +83,65 @@ public class BasicComponents
 	public static final String LANGUAGE_PATH = RESOURCE_PATH + "languages/";
 	private static final String[] LANGUAGES_SUPPORTED = new String[] { "en_US", "zh_CN", "es_ES", "it_IT", "nl_NL", "de_DE" };
 
-	public static int BLOCK_ID_PREFIX = 3970;
-
 	public static Block blockBasicOre;
 	public static Block blockCopperWire;
 	public static Block blockMachine;
 
-	public static final int ITEM_ID_PREFIX = 13970;
 	public static ItemElectric itemBattery;
 	public static Item itemInfiniteBattery;
 	public static Item itemWrench;
 	public static Item itemCircuit;
-	public static Item itemBronzeDust;
 	public static Item itemMotor;
 	public static Item itemPlate;
-	public static Item itemIngot;
-	public static Item itemSteelDust;
+
+	public static Item itemIngotCopper;
+	public static Item itemIngotTin;
+	public static Item itemIngotSteel;
+	public static Item itemIngotBronze;
+
+	public static Item itemDustSteel;
+	public static Item itemDustBronze;
 
 	public static OreGenBase copperOreGeneration;
 	public static OreGenBase tinOreGeneration;
 
 	public static boolean INITIALIZED = false;
+	public static boolean REGISTER_RECIPES = false;
 
 	private static boolean registeredTileEntities = false;
 	private static boolean registeredTileEntityRenderers = false;
 
 	public static final ArrayList bcDependants = new ArrayList();
+
+	/**
+	 * Auto-incrementing configuration IDs. Use this to make sure no config ID is the same.
+	 */
+	public static int BLOCK_ID_PREFIX = 3970;
+	public static final int ITEM_ID_PREFIX = 13970;
+
+	private static int NEXT_BLOCK_ID = BLOCK_ID_PREFIX;
+	private static int NEXT_ITEM_ID = ITEM_ID_PREFIX;
+
+	public static int getNextBlockID()
+	{
+		NEXT_BLOCK_ID++;
+		return NEXT_BLOCK_ID;
+	}
+
+	public static int getNextItemID()
+	{
+		NEXT_ITEM_ID++;
+		return NEXT_ITEM_ID;
+	}
+
+	public static void init()
+	{
+		if (!INITIALIZED)
+		{
+			System.out.println("Basic Components Loaded: " + TranslationHelper.loadLanguages(BasicComponents.LANGUAGE_PATH, LANGUAGES_SUPPORTED) + " Languages.");
+			INITIALIZED = true;
+		}
+	}
 
 	/**
 	 * Call this function in your mod init stage, after all the appropriate blocks are registered.
@@ -103,11 +150,8 @@ public class BasicComponents
 	{
 		bcDependants.add(modInstance);
 
-		if (!INITIALIZED)
+		if (!REGISTER_RECIPES)
 		{
-			System.out.println("Basic Components Loaded: " + TranslationHelper.loadLanguages(BasicComponents.LANGUAGE_PATH, LANGUAGES_SUPPORTED) + " Languages.");
-			
-			TAB = new TabBC(CreativeTabs.getNextID(), CHANNEL);
 
 			/**
 			 * Register Recipes
@@ -171,32 +215,32 @@ public class BasicComponents
 			}
 		}
 
-		INITIALIZED = true;
+		REGISTER_RECIPES = true;
 	}
 
 	public static ItemStack registerOres(int id, boolean require)
 	{
-		UniversalElectricity.CONFIGURATION.load();
+		BasicComponents.CONFIGURATION.load();
 
 		if (blockBasicOre == null)
 		{
-			blockBasicOre = new BlockBCOre(UniversalElectricity.CONFIGURATION.getBlock("Ore", BasicComponents.BLOCK_ID_PREFIX + 0).getInt());
+			blockBasicOre = new BlockBCOre(BasicComponents.CONFIGURATION.getBlock("Ore", BasicComponents.BLOCK_ID_PREFIX + 0).getInt());
 			GameRegistry.registerBlock(BasicComponents.blockBasicOre, ItemBlockBCOre.class, "Ore");
 		}
 
 		if (copperOreGeneration == null)
 		{
-			copperOreGeneration = new OreGenReplaceStone("Copper Ore", "oreCopper", new ItemStack(BasicComponents.blockBasicOre, 1, 0), 60, 23, 4).enable(UniversalElectricity.CONFIGURATION);
+			copperOreGeneration = new OreGenReplaceStone("Copper Ore", "oreCopper", new ItemStack(BasicComponents.blockBasicOre, 1, 0), 60, 23, 4).enable(BasicComponents.CONFIGURATION);
 			OreGenerator.addOre(BasicComponents.copperOreGeneration);
 		}
 
 		if (tinOreGeneration == null)
 		{
-			tinOreGeneration = new OreGenReplaceStone("Tin Ore", "oreTin", new ItemStack(BasicComponents.blockBasicOre, 1, 1), 60, 19, 4).enable(UniversalElectricity.CONFIGURATION);
+			tinOreGeneration = new OreGenReplaceStone("Tin Ore", "oreTin", new ItemStack(BasicComponents.blockBasicOre, 1, 1), 60, 19, 4).enable(BasicComponents.CONFIGURATION);
 			OreGenerator.addOre(BasicComponents.tinOreGeneration);
 		}
 
-		UniversalElectricity.CONFIGURATION.save();
+		BasicComponents.CONFIGURATION.save();
 
 		return new ItemStack(blockBasicOre);
 	}
@@ -205,12 +249,12 @@ public class BasicComponents
 	{
 		if (blockCopperWire == null)
 		{
-			UniversalElectricity.CONFIGURATION.load();
-			BasicComponents.blockCopperWire = new BlockCopperWire(UniversalElectricity.CONFIGURATION.getBlock("Copper_Wire", BasicComponents.BLOCK_ID_PREFIX + 1).getInt());
+			BasicComponents.CONFIGURATION.load();
+			BasicComponents.blockCopperWire = new BlockCopperWire(BasicComponents.CONFIGURATION.getBlock("Copper_Wire", BasicComponents.BLOCK_ID_PREFIX + 1).getInt());
 			GameRegistry.registerBlock(BasicComponents.blockCopperWire, ItemBlockCopperWire.class, "Copper Wire");
 			OreDictionary.registerOre("copperWire", blockCopperWire);
 
-			UniversalElectricity.CONFIGURATION.save();
+			BasicComponents.CONFIGURATION.save();
 		}
 
 		return new ItemStack(blockCopperWire);
@@ -220,13 +264,13 @@ public class BasicComponents
 	{
 		if (blockMachine == null)
 		{
-			UniversalElectricity.CONFIGURATION.load();
-			BasicComponents.blockMachine = new BlockBasicMachine(UniversalElectricity.CONFIGURATION.getBlock("Basic Machine", BasicComponents.BLOCK_ID_PREFIX + 4).getInt(), 0);
+			BasicComponents.CONFIGURATION.load();
+			BasicComponents.blockMachine = new BlockBasicMachine(BasicComponents.CONFIGURATION.getBlock("Basic Machine", BasicComponents.BLOCK_ID_PREFIX + 4).getInt(), 0);
 			GameRegistry.registerBlock(BasicComponents.blockMachine, ItemBlockBasicMachine.class, "Basic Machine");
 			OreDictionary.registerOre("coalGenerator", ((BlockBasicMachine) BasicComponents.blockMachine).getCoalGenerator());
 			OreDictionary.registerOre("batteryBox", ((BlockBasicMachine) BasicComponents.blockMachine).getBatteryBox());
 			OreDictionary.registerOre("electricFurnace", ((BlockBasicMachine) BasicComponents.blockMachine).getElectricFurnace());
-			UniversalElectricity.CONFIGURATION.save();
+			BasicComponents.CONFIGURATION.save();
 		}
 
 		return new ItemStack(blockMachine);
@@ -236,12 +280,12 @@ public class BasicComponents
 	{
 		if (itemCircuit == null)
 		{
-			UniversalElectricity.CONFIGURATION.load();
-			itemCircuit = new ItemCircuit(UniversalElectricity.CONFIGURATION.getItem("Circuit", BasicComponents.ITEM_ID_PREFIX + 3).getInt(), 16);
+			BasicComponents.CONFIGURATION.load();
+			itemCircuit = new ItemCircuit(BasicComponents.CONFIGURATION.getItem("Circuit", BasicComponents.ITEM_ID_PREFIX + 3).getInt(), 16);
 			OreDictionary.registerOre("basicCircuit", new ItemStack(BasicComponents.itemCircuit, 1, 0));
 			OreDictionary.registerOre("advancedCircuit", new ItemStack(BasicComponents.itemCircuit, 1, 1));
 			OreDictionary.registerOre("eliteCircuit", new ItemStack(BasicComponents.itemCircuit, 1, 2));
-			UniversalElectricity.CONFIGURATION.save();
+			BasicComponents.CONFIGURATION.save();
 		}
 
 		return new ItemStack(itemCircuit);
@@ -251,10 +295,10 @@ public class BasicComponents
 	{
 		if (itemBattery == null)
 		{
-			UniversalElectricity.CONFIGURATION.load();
-			itemBattery = new ItemBattery(UniversalElectricity.CONFIGURATION.getItem("Battery", BasicComponents.ITEM_ID_PREFIX + 1).getInt());
+			BasicComponents.CONFIGURATION.load();
+			itemBattery = new ItemBattery(BasicComponents.CONFIGURATION.getItem("Battery", BasicComponents.ITEM_ID_PREFIX + 1).getInt());
 			OreDictionary.registerOre("battery", BasicComponents.itemBattery);
-			UniversalElectricity.CONFIGURATION.save();
+			BasicComponents.CONFIGURATION.save();
 		}
 
 		return new ItemStack(itemBattery);
@@ -264,10 +308,10 @@ public class BasicComponents
 	{
 		if (itemInfiniteBattery == null)
 		{
-			UniversalElectricity.CONFIGURATION.load();
-			itemInfiniteBattery = new ItemInfiniteBattery(UniversalElectricity.CONFIGURATION.getItem("Infinite Battery", BasicComponents.ITEM_ID_PREFIX + 0).getInt());
+			BasicComponents.CONFIGURATION.load();
+			itemInfiniteBattery = new ItemInfiniteBattery(BasicComponents.CONFIGURATION.getItem("Infinite Battery", BasicComponents.ITEM_ID_PREFIX + 0).getInt());
 			OreDictionary.registerOre("batteryInfinite", itemInfiniteBattery);
-			UniversalElectricity.CONFIGURATION.save();
+			BasicComponents.CONFIGURATION.save();
 		}
 
 		return new ItemStack(itemInfiniteBattery);
@@ -277,10 +321,10 @@ public class BasicComponents
 	{
 		if (itemWrench == null)
 		{
-			UniversalElectricity.CONFIGURATION.load();
-			itemWrench = new ItemWrench(UniversalElectricity.CONFIGURATION.getItem("Universal Wrench", BasicComponents.ITEM_ID_PREFIX + 2).getInt(), 20);
+			BasicComponents.CONFIGURATION.load();
+			itemWrench = new ItemWrench(BasicComponents.CONFIGURATION.getItem("Universal Wrench", BasicComponents.ITEM_ID_PREFIX + 2).getInt(), 20);
 			OreDictionary.registerOre("wrench", itemWrench);
-			UniversalElectricity.CONFIGURATION.save();
+			BasicComponents.CONFIGURATION.save();
 		}
 
 		return new ItemStack(itemWrench);
@@ -290,10 +334,10 @@ public class BasicComponents
 	{
 		if (itemMotor == null)
 		{
-			UniversalElectricity.CONFIGURATION.load();
-			itemMotor = new ItemBC("motor", UniversalElectricity.CONFIGURATION.getItem("Motor", BasicComponents.ITEM_ID_PREFIX + 14).getInt());
+			BasicComponents.CONFIGURATION.load();
+			itemMotor = new ItemBase("motor", BasicComponents.CONFIGURATION.getItem("Motor", BasicComponents.ITEM_ID_PREFIX + 14).getInt());
 			OreDictionary.registerOre("motor", itemMotor);
-			UniversalElectricity.CONFIGURATION.save();
+			BasicComponents.CONFIGURATION.save();
 		}
 
 		return new ItemStack(itemMotor);
@@ -308,8 +352,8 @@ public class BasicComponents
 	{
 		if (itemPlate == null)
 		{
-			UniversalElectricity.CONFIGURATION.load();
-			itemPlate = new ItemPlate(UniversalElectricity.CONFIGURATION.getItem("Plates", BasicComponents.ITEM_ID_PREFIX + 13).getInt());
+			BasicComponents.CONFIGURATION.load();
+			itemPlate = new ItemPlate(BasicComponents.CONFIGURATION.getItem("Plates", BasicComponents.ITEM_ID_PREFIX + 13).getInt());
 			OreDictionary.registerOre("ingotIron", Item.ingotIron);
 			OreDictionary.registerOre("ingotGold", Item.ingotGold);
 
@@ -334,34 +378,47 @@ public class BasicComponents
 				}
 			}
 
-			UniversalElectricity.CONFIGURATION.save();
+			BasicComponents.CONFIGURATION.save();
 		}
 
 		return new ItemStack(itemPlate);
 	}
 
-	public static ItemStack registerIngots(int id, boolean require)
+	public static Item requireIngot(String name, int id)
 	{
-		if (BasicComponents.itemIngot == null)
+		init();
+		
+		try
 		{
-			UniversalElectricity.CONFIGURATION.load();
-			BasicComponents.itemIngot = new ItemIngot(UniversalElectricity.CONFIGURATION.getItem("Ingots", BasicComponents.ITEM_ID_PREFIX + 4).getInt());
+			Field field = ReflectionHelper.findField(BasicComponents.class, "item" + Character.toUpperCase(name.charAt(0)) + name.substring(1));
+			ItemIngot f = (ItemIngot) field.get(null);
 
-			for (int i = 0; i < ItemIngot.TYPES.length; i++)
+			if (f == null)
 			{
-				String itemName = ItemIngot.TYPES[i];
-
-				if (OreDictionary.getOres(itemName).size() <= 0 || require)
-				{
-					GameRegistry.addRecipe(new ShapelessOreRecipe(new ItemStack(itemIngot, 1, i), new Object[] { itemName.replaceAll("ingot", "plate") }));
-					OreDictionary.registerOre(itemName, new ItemStack(itemIngot, 1, i));
-				}
+				CONFIGURATION.load();
+				field.set(null, new ItemIngot(name, id <= 0 ? getNextItemID() : id));
+				OreDictionary.registerOre(name, new ItemStack((Item) field.get(null)));
+				CONFIGURATION.save();
 			}
 
-			UniversalElectricity.CONFIGURATION.save();
+			return (Item) field.get(null);
+		}
+		catch (Exception e)
+		{
+			FMLLog.severe("Failed to require ingot: " + name);
+			e.printStackTrace();
 		}
 
-		return new ItemStack(itemIngot);
+		return null;
+	}
+
+	public static Item requestIngot(String name, int id)
+	{
+		if (OreDictionary.getOres("ingotCopper").size() <= 0)
+		{
+			return requireIngot(name, id);
+		}
+		return null;
 	}
 
 	/**
@@ -371,30 +428,30 @@ public class BasicComponents
 	 */
 	public static ItemStack registerBronzeDust(int id, boolean require)
 	{
-		if (itemBronzeDust == null)
+		if (itemDustBronze == null)
 		{
 			String itemName = "dustBronze";
 
 			if (OreDictionary.getOres(itemName).size() <= 0 || require)
 			{
-				UniversalElectricity.CONFIGURATION.load();
-				itemBronzeDust = new ItemBC(itemName, UniversalElectricity.CONFIGURATION.getItem("Bronze Dust", BasicComponents.ITEM_ID_PREFIX + 8).getInt());
-				OreDictionary.registerOre(itemName, itemBronzeDust);
+				BasicComponents.CONFIGURATION.load();
+				itemDustBronze = new ItemBase(itemName, BasicComponents.CONFIGURATION.getItem("Bronze Dust", BasicComponents.ITEM_ID_PREFIX + 8).getInt());
+				OreDictionary.registerOre(itemName, itemDustBronze);
 
-				RecipeHelper.addRecipe(new ShapedOreRecipe(new ItemStack(BasicComponents.itemBronzeDust), new Object[] { "!#!", '!', "ingotCopper", '#', "ingotTin" }), "Bronze Dust", UniversalElectricity.CONFIGURATION, true);
+				RecipeHelper.addRecipe(new ShapedOreRecipe(new ItemStack(BasicComponents.itemDustBronze), new Object[] { "!#!", '!', "ingotCopper", '#', "ingotTin" }), "Bronze Dust", BasicComponents.CONFIGURATION, true);
 
 				if (OreDictionary.getOres("ingotBronze").size() > 0)
 				{
 					// Bronze
-					GameRegistry.addSmelting(BasicComponents.itemBronzeDust.itemID, OreDictionary.getOres("ingotBronze").get(0), 0.6f);
+					GameRegistry.addSmelting(BasicComponents.itemDustBronze.itemID, OreDictionary.getOres("ingotBronze").get(0), 0.6f);
 				}
 
-				UniversalElectricity.CONFIGURATION.save();
+				BasicComponents.CONFIGURATION.save();
 			}
 
 		}
 
-		return new ItemStack(itemBronzeDust);
+		return new ItemStack(itemDustBronze);
 	}
 
 	/**
@@ -404,30 +461,30 @@ public class BasicComponents
 	 */
 	public static ItemStack registerSteelDust(int id, boolean require)
 	{
-		if (itemSteelDust == null)
+		if (itemDustSteel == null)
 		{
 			String itemName = "dustSteel";
 
 			if (OreDictionary.getOres(itemName).size() <= 0 || require)
 			{
-				UniversalElectricity.CONFIGURATION.load();
+				BasicComponents.CONFIGURATION.load();
 
-				itemSteelDust = new ItemBC(itemName, UniversalElectricity.CONFIGURATION.getItem("Steel Dust", BasicComponents.ITEM_ID_PREFIX + 9).getInt());
-				OreDictionary.registerOre(itemName, itemSteelDust);
-				RecipeHelper.addRecipe(new ShapedOreRecipe(new ItemStack(BasicComponents.itemSteelDust), new Object[] { " C ", "CIC", " C ", 'C', new ItemStack(Item.coal, 1, 1), 'I', Item.ingotIron }), "Steel Dust", UniversalElectricity.CONFIGURATION, true);
-				RecipeHelper.addRecipe(new ShapedOreRecipe(new ItemStack(BasicComponents.itemSteelDust), new Object[] { " C ", "CIC", " C ", 'C', new ItemStack(Item.coal, 1, 0), 'I', Item.ingotIron }), "Steel Dust", UniversalElectricity.CONFIGURATION, true);
+				itemDustSteel = new ItemBase(itemName, BasicComponents.CONFIGURATION.getItem("Steel Dust", BasicComponents.ITEM_ID_PREFIX + 9).getInt());
+				OreDictionary.registerOre(itemName, itemDustSteel);
+				RecipeHelper.addRecipe(new ShapedOreRecipe(new ItemStack(BasicComponents.itemDustSteel), new Object[] { " C ", "CIC", " C ", 'C', new ItemStack(Item.coal, 1, 1), 'I', Item.ingotIron }), "Steel Dust", BasicComponents.CONFIGURATION, true);
+				RecipeHelper.addRecipe(new ShapedOreRecipe(new ItemStack(BasicComponents.itemDustSteel), new Object[] { " C ", "CIC", " C ", 'C', new ItemStack(Item.coal, 1, 0), 'I', Item.ingotIron }), "Steel Dust", BasicComponents.CONFIGURATION, true);
 
 				if (OreDictionary.getOres("ingotSteel").size() > 0)
 				{
-					GameRegistry.addSmelting(BasicComponents.itemSteelDust.itemID, OreDictionary.getOres("ingotSteel").get(0), 0.8f);
+					GameRegistry.addSmelting(BasicComponents.itemDustSteel.itemID, OreDictionary.getOres("ingotSteel").get(0), 0.8f);
 				}
 
-				UniversalElectricity.CONFIGURATION.save();
+				BasicComponents.CONFIGURATION.save();
 			}
 
 		}
 
-		return new ItemStack(itemBronzeDust);
+		return new ItemStack(itemDustBronze);
 	}
 
 	/**
