@@ -15,8 +15,6 @@ import net.minecraftforge.oredict.ShapedOreRecipe;
 import net.minecraftforge.oredict.ShapelessOreRecipe;
 import universalelectricity.core.UniversalElectricity;
 import universalelectricity.core.item.ElectricItemHelper;
-import universalelectricity.core.item.ItemElectric;
-import universalelectricity.prefab.RecipeHelper;
 import universalelectricity.prefab.TranslationHelper;
 import universalelectricity.prefab.ore.OreGenBase;
 import universalelectricity.prefab.ore.OreGenReplaceStone;
@@ -24,17 +22,13 @@ import universalelectricity.prefab.ore.OreGenerator;
 import basiccomponents.client.RenderCopperWire;
 import basiccomponents.common.block.BlockBCOre;
 import basiccomponents.common.block.BlockBasicMachine;
-import basiccomponents.common.block.BlockCopperWire;
 import basiccomponents.common.item.ItemBase;
 import basiccomponents.common.item.ItemBattery;
 import basiccomponents.common.item.ItemBlockBCOre;
 import basiccomponents.common.item.ItemBlockBasicMachine;
-import basiccomponents.common.item.ItemBlockCopperWire;
-import basiccomponents.common.item.ItemCircuit;
 import basiccomponents.common.item.ItemInfiniteBattery;
 import basiccomponents.common.item.ItemIngot;
 import basiccomponents.common.item.ItemPlate;
-import basiccomponents.common.item.ItemWrench;
 import basiccomponents.common.tileentity.TileEntityBatteryBox;
 import basiccomponents.common.tileentity.TileEntityCoalGenerator;
 import basiccomponents.common.tileentity.TileEntityCopperWire;
@@ -87,12 +81,21 @@ public class BasicComponents
 	public static Block blockCopperWire;
 	public static Block blockMachine;
 
-	public static ItemElectric itemBattery;
+	public static Item itemBattery;
 	public static Item itemInfiniteBattery;
 	public static Item itemWrench;
-	public static Item itemCircuit;
 	public static Item itemMotor;
-	public static Item itemPlate;
+
+	public static Item itemCircuitBasic;
+	public static Item itemCircuitAdvanced;
+	public static Item itemCircuitElite;
+
+	public static Item itemPlateCopper;
+	public static Item itemPlateTin;
+	public static Item itemPlateBronze;
+	public static Item itemPlateStee;
+	public static Item itemPlateIron;
+	public static Item itemPlateGold;
 
 	public static Item itemIngotCopper;
 	public static Item itemIngotTin;
@@ -116,7 +119,7 @@ public class BasicComponents
 	/**
 	 * Auto-incrementing configuration IDs. Use this to make sure no config ID is the same.
 	 */
-	public static int BLOCK_ID_PREFIX = 3970;
+	public static final int BLOCK_ID_PREFIX = 3970;
 	public static final int ITEM_ID_PREFIX = 13970;
 
 	private static int NEXT_BLOCK_ID = BLOCK_ID_PREFIX;
@@ -144,6 +147,130 @@ public class BasicComponents
 	}
 
 	/**
+	 * Creates a specific Basic Component item. Require ingots first before dusts to register
+	 * recipes correctly.
+	 * 
+	 * @param name - Name of the item: e.g ingotCopper, ingotSteel
+	 * @param id - The specified ID of the item. Use 0 for a default value to be used.
+	 * @return The Item class.
+	 */
+	public static Item requireItem(String name, int id)
+	{
+		init();
+
+		try
+		{
+			Field field = ReflectionHelper.findField(BasicComponents.class, "item" + Character.toUpperCase(name.charAt(0)) + name.substring(1));
+			Item f = (Item) field.get(null);
+
+			if (f == null)
+			{
+				CONFIGURATION.load();
+
+				if (name.contains("ingot"))
+				{
+					field.set(null, new ItemIngot(name, id <= 0 ? getNextItemID() : id));
+				}
+				else if (name.contains("plate"))
+				{
+					field.set(null, new ItemPlate(name, id <= 0 ? getNextItemID() : id));
+					Item item = (Item) field.get(null);
+
+					GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), "!!", "!!", '!', name.replaceAll("plate", "ingot")));
+
+					if (name.equals("plateIron"))
+					{
+						GameRegistry.addRecipe(new ShapelessOreRecipe(Item.ingotIron, item));
+					}
+					else if (name.equals("plateGold"))
+					{
+						GameRegistry.addRecipe(new ShapelessOreRecipe(Item.ingotGold, item));
+					}
+				}
+				else if (name.contains("dust"))
+				{
+					field.set(null, new ItemBase(name, id <= 0 ? getNextItemID() : id).setCreativeTab(CreativeTabs.tabMaterials));
+					Item item = (Item) field.get(null);
+
+					if (name.equals("dustBronze"))
+					{
+						GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), "!#!", '!', "ingotCopper", '#', "ingotTin"));
+
+						if (OreDictionary.getOres("ingotBronze").size() > 0)
+						{
+							GameRegistry.addSmelting(item.itemID, OreDictionary.getOres("ingotBronze").get(0), 0.6f);
+						}
+					}
+					else if (name.equals("dustSteel"))
+					{
+						GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), " C ", "CIC", " C ", 'I', Item.ingotIron, 'C', Item.coal));
+
+						if (OreDictionary.getOres("ingotSteel").size() > 0)
+						{
+							GameRegistry.addSmelting(item.itemID, OreDictionary.getOres("ingotSteel").get(0), 0.8f);
+						}
+					}
+
+				}
+				else
+				{
+					field.set(null, new ItemBase(name, id <= 0 ? getNextItemID() : id).setCreativeTab(CreativeTabs.tabMaterials));
+					Item item = (Item) field.get(null);
+
+					if (name.equals("basicCircuit"))
+					{
+						GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), "!#!", "#@#", "!#!", '@', "plateBronze", '#', Item.redstone, '!', "copperWire"));
+						GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), "!#!", "#@#", "!#!", '@', "plateSteel", '#', Item.redstone, '!', "copperWire"));
+					}
+					else if (name.equals("advancedCircuit"))
+					{
+						GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), "@@@", "#?#", "@@@", '@', Item.redstone, '?', Item.diamond, '#', "basicCircuit"));
+					}
+					else if (name.equals("eliteCircuit"))
+					{
+						GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), "@@@", "?#?", "@@@", '@', Item.ingotGold, '?', "advancedCircuit", '#', Block.blockLapis));
+					}
+					else if (name.equals("wrench"))
+					{
+						GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), " S ", " SS", "S  ", 'S', "ingotSteel"));
+					}
+					else if (name.equals("motor"))
+					{
+						GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), "@!@", "!#!", "@!@", '!', "ingotSteel", '#', Item.ingotIron, '@', "copperWire"));
+					}
+
+				}
+
+				Item item = (Item) field.get(null);
+				OreDictionary.registerOre(name, new ItemStack(item));
+				CONFIGURATION.save();
+
+				FMLLog.info("Successfully requested item: " + name);
+				return item;
+			}
+
+			return f;
+		}
+		catch (Exception e)
+		{
+			FMLLog.severe("Failed to require ingot: " + name);
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	public static Item requestItem(String name, int id)
+	{
+		if (OreDictionary.getOres(name).size() <= 0)
+		{
+			return requireItem(name, id);
+		}
+
+		return null;
+	}
+
+	/**
 	 * Call this function in your mod init stage, after all the appropriate blocks are registered.
 	 */
 	public static void register(Object modInstance)
@@ -152,34 +279,9 @@ public class BasicComponents
 
 		if (!REGISTER_RECIPES)
 		{
-
 			/**
 			 * Register Recipes
 			 */
-			// Recipe Registry
-			// Motor
-			if (itemMotor != null)
-			{
-				GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(BasicComponents.itemMotor), new Object[] { "@!@", "!#!", "@!@", '!', "ingotSteel", '#', Item.ingotIron, '@', "copperWire" }));
-			}
-
-			// Wrench
-			if (itemWrench != null)
-			{
-				GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(BasicComponents.itemWrench), new Object[] { " S ", " SS", "S  ", 'S', "ingotSteel" }));
-			}
-
-			if (blockMachine != null)
-			{
-				// Battery Box
-				GameRegistry.addRecipe(new ShapedOreRecipe(OreDictionary.getOres("batteryBox").get(0), new Object[] { "SSS", "BBB", "SSS", 'B', ElectricItemHelper.getUncharged(BasicComponents.itemBattery), 'S', "ingotSteel" }));
-				// Coal Generator
-				GameRegistry.addRecipe(new ShapedOreRecipe(OreDictionary.getOres("coalGenerator").get(0), new Object[] { "MMM", "MOM", "MCM", 'M', "ingotSteel", 'C', BasicComponents.itemMotor, 'O', Block.furnaceIdle }));
-				GameRegistry.addRecipe(new ShapedOreRecipe(OreDictionary.getOres("coalGenerator").get(0), new Object[] { "MMM", "MOM", "MCM", 'M', "ingotBronze", 'C', BasicComponents.itemMotor, 'O', Block.furnaceIdle }));
-				// Electric Furnace
-				GameRegistry.addRecipe(new ShapedOreRecipe(OreDictionary.getOres("electricFurnace").get(0), new Object[] { "SSS", "SCS", "SMS", 'S', "ingotSteel", 'C', BasicComponents.itemCircuit, 'M', BasicComponents.itemMotor }));
-			}
-
 			// Copper
 			if (blockBasicOre != null)
 			{
@@ -198,20 +300,6 @@ public class BasicComponents
 				UniversalElectricity.isNetworkActive = true;
 				// Copper Wire
 				GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(blockCopperWire, 6), new Object[] { "!!!", "@@@", "!!!", '!', Block.cloth, '@', "ingotCopper" }));
-			}
-			if (itemBattery != null)
-			{
-				// Battery
-				GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(itemBattery), new Object[] { " T ", "TRT", "TCT", 'T', "ingotTin", 'R', Item.redstone, 'C', Item.coal }));
-			}
-
-			if (itemCircuit != null)
-			{
-				// Circuit
-				GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(itemCircuit, 1, 0), new Object[] { "!#!", "#@#", "!#!", '@', "plateBronze", '#', Item.redstone, '!', "copperWire" }));
-				GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(itemCircuit, 1, 0), new Object[] { "!#!", "#@#", "!#!", '@', "plateSteel", '#', Item.redstone, '!', "copperWire" }));
-				GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(itemCircuit, 1, 1), new Object[] { "@@@", "#?#", "@@@", '@', Item.redstone, '?', Item.diamond, '#', BasicComponents.itemCircuit }));
-				GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(itemCircuit, 1, 2), new Object[] { "@@@", "?#?", "@@@", '@', Item.ingotGold, '?', new ItemStack(BasicComponents.itemCircuit, 1, 1), '#', Block.blockLapis }));
 			}
 		}
 
@@ -245,59 +333,15 @@ public class BasicComponents
 		return new ItemStack(blockBasicOre);
 	}
 
-	public static ItemStack registerCopperWire(int id)
-	{
-		if (blockCopperWire == null)
-		{
-			BasicComponents.CONFIGURATION.load();
-			BasicComponents.blockCopperWire = new BlockCopperWire(BasicComponents.CONFIGURATION.getBlock("Copper_Wire", BasicComponents.BLOCK_ID_PREFIX + 1).getInt());
-			GameRegistry.registerBlock(BasicComponents.blockCopperWire, ItemBlockCopperWire.class, "Copper Wire");
-			OreDictionary.registerOre("copperWire", blockCopperWire);
-
-			BasicComponents.CONFIGURATION.save();
-		}
-
-		return new ItemStack(blockCopperWire);
-	}
-
-	public static ItemStack registerMachines(int id)
-	{
-		if (blockMachine == null)
-		{
-			BasicComponents.CONFIGURATION.load();
-			BasicComponents.blockMachine = new BlockBasicMachine(BasicComponents.CONFIGURATION.getBlock("Basic Machine", BasicComponents.BLOCK_ID_PREFIX + 4).getInt(), 0);
-			GameRegistry.registerBlock(BasicComponents.blockMachine, ItemBlockBasicMachine.class, "Basic Machine");
-			OreDictionary.registerOre("coalGenerator", ((BlockBasicMachine) BasicComponents.blockMachine).getCoalGenerator());
-			OreDictionary.registerOre("batteryBox", ((BlockBasicMachine) BasicComponents.blockMachine).getBatteryBox());
-			OreDictionary.registerOre("electricFurnace", ((BlockBasicMachine) BasicComponents.blockMachine).getElectricFurnace());
-			BasicComponents.CONFIGURATION.save();
-		}
-
-		return new ItemStack(blockMachine);
-	}
-
-	public static ItemStack registerCircuits(int id)
-	{
-		if (itemCircuit == null)
-		{
-			BasicComponents.CONFIGURATION.load();
-			itemCircuit = new ItemCircuit(BasicComponents.CONFIGURATION.getItem("Circuit", BasicComponents.ITEM_ID_PREFIX + 3).getInt(), 16);
-			OreDictionary.registerOre("basicCircuit", new ItemStack(BasicComponents.itemCircuit, 1, 0));
-			OreDictionary.registerOre("advancedCircuit", new ItemStack(BasicComponents.itemCircuit, 1, 1));
-			OreDictionary.registerOre("eliteCircuit", new ItemStack(BasicComponents.itemCircuit, 1, 2));
-			BasicComponents.CONFIGURATION.save();
-		}
-
-		return new ItemStack(itemCircuit);
-	}
-
 	public static ItemStack registerBattery(int id)
 	{
 		if (itemBattery == null)
 		{
 			BasicComponents.CONFIGURATION.load();
 			itemBattery = new ItemBattery(BasicComponents.CONFIGURATION.getItem("Battery", BasicComponents.ITEM_ID_PREFIX + 1).getInt());
-			OreDictionary.registerOre("battery", BasicComponents.itemBattery);
+			// Battery
+			GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(itemBattery), " T ", "TRT", "TCT", 'T', "ingotTin", 'R', Item.redstone, 'C', Item.coal));
+			OreDictionary.registerOre("battery", ElectricItemHelper.getUncharged(BasicComponents.itemBattery));
 			BasicComponents.CONFIGURATION.save();
 		}
 
@@ -310,181 +354,35 @@ public class BasicComponents
 		{
 			BasicComponents.CONFIGURATION.load();
 			itemInfiniteBattery = new ItemInfiniteBattery(BasicComponents.CONFIGURATION.getItem("Infinite Battery", BasicComponents.ITEM_ID_PREFIX + 0).getInt());
-			OreDictionary.registerOre("batteryInfinite", itemInfiniteBattery);
+			OreDictionary.registerOre("batteryInfinite", ElectricItemHelper.getUncharged(itemInfiniteBattery));
 			BasicComponents.CONFIGURATION.save();
 		}
 
 		return new ItemStack(itemInfiniteBattery);
 	}
 
-	public static ItemStack registerWrench(int id)
+	public static ItemStack registerMachines(int id)
 	{
-		if (itemWrench == null)
+		if (blockMachine == null)
 		{
 			BasicComponents.CONFIGURATION.load();
-			itemWrench = new ItemWrench(BasicComponents.CONFIGURATION.getItem("Universal Wrench", BasicComponents.ITEM_ID_PREFIX + 2).getInt(), 20);
-			OreDictionary.registerOre("wrench", itemWrench);
+			BasicComponents.blockMachine = new BlockBasicMachine(BasicComponents.CONFIGURATION.getBlock("Basic Machine", BasicComponents.BLOCK_ID_PREFIX + 4).getInt(), 0);
+			GameRegistry.registerBlock(BasicComponents.blockMachine, ItemBlockBasicMachine.class, "Basic Machine");
+			// Battery Box
+			GameRegistry.addRecipe(new ShapedOreRecipe(OreDictionary.getOres("batteryBox").get(0), new Object[] { "SSS", "BBB", "SSS", 'B', ElectricItemHelper.getUncharged(BasicComponents.itemBattery), 'S', "ingotSteel" }));
+			// Coal Generator
+			GameRegistry.addRecipe(new ShapedOreRecipe(OreDictionary.getOres("coalGenerator").get(0), new Object[] { "MMM", "MOM", "MCM", 'M', "ingotSteel", 'C', BasicComponents.itemMotor, 'O', Block.furnaceIdle }));
+			GameRegistry.addRecipe(new ShapedOreRecipe(OreDictionary.getOres("coalGenerator").get(0), new Object[] { "MMM", "MOM", "MCM", 'M', "ingotBronze", 'C', BasicComponents.itemMotor, 'O', Block.furnaceIdle }));
+			// Electric Furnace
+			GameRegistry.addRecipe(new ShapedOreRecipe(OreDictionary.getOres("electricFurnace").get(0), new Object[] { "SSS", "SCS", "SMS", 'S', "ingotSteel", 'C', "circuitAdvanced", 'M', "motor" }));
+
+			OreDictionary.registerOre("coalGenerator", ((BlockBasicMachine) BasicComponents.blockMachine).getCoalGenerator());
+			OreDictionary.registerOre("batteryBox", ((BlockBasicMachine) BasicComponents.blockMachine).getBatteryBox());
+			OreDictionary.registerOre("electricFurnace", ((BlockBasicMachine) BasicComponents.blockMachine).getElectricFurnace());
 			BasicComponents.CONFIGURATION.save();
 		}
 
-		return new ItemStack(itemWrench);
-	}
-
-	public static ItemStack registerMotor(int id)
-	{
-		if (itemMotor == null)
-		{
-			BasicComponents.CONFIGURATION.load();
-			itemMotor = new ItemBase("motor", BasicComponents.CONFIGURATION.getItem("Motor", BasicComponents.ITEM_ID_PREFIX + 14).getInt());
-			OreDictionary.registerOre("motor", itemMotor);
-			BasicComponents.CONFIGURATION.save();
-		}
-
-		return new ItemStack(itemMotor);
-	}
-
-	/**
-	 * 
-	 * @param itemName: Steel, Bronze Copper, Tin
-	 * @return
-	 */
-	public static ItemStack registerPlates(int id, boolean require)
-	{
-		if (itemPlate == null)
-		{
-			BasicComponents.CONFIGURATION.load();
-			itemPlate = new ItemPlate(BasicComponents.CONFIGURATION.getItem("Plates", BasicComponents.ITEM_ID_PREFIX + 13).getInt());
-			OreDictionary.registerOre("ingotIron", Item.ingotIron);
-			OreDictionary.registerOre("ingotGold", Item.ingotGold);
-
-			for (int i = 0; i < ItemPlate.TYPES.length; i++)
-			{
-				String itemName = ItemPlate.TYPES[i];
-
-				if (OreDictionary.getOres(itemName).size() <= 0 || require)
-				{
-					GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(itemPlate, 1, i), new Object[] { "!!", "!!", '!', itemName.replaceAll("plate", "ingot") }));
-
-					if (itemName.equals("ingotIron"))
-					{
-						GameRegistry.addRecipe(new ShapelessOreRecipe(Item.ingotIron, new Object[] { new ItemStack(itemPlate, 1, i) }));
-					}
-					else if (itemName.equals("ingotGold"))
-					{
-						GameRegistry.addRecipe(new ShapelessOreRecipe(Item.ingotGold, new Object[] { new ItemStack(itemPlate, 1, i) }));
-					}
-
-					OreDictionary.registerOre(itemName, new ItemStack(itemPlate, 1, i));
-				}
-			}
-
-			BasicComponents.CONFIGURATION.save();
-		}
-
-		return new ItemStack(itemPlate);
-	}
-
-	public static Item requireIngot(String name, int id)
-	{
-		init();
-		
-		try
-		{
-			Field field = ReflectionHelper.findField(BasicComponents.class, "item" + Character.toUpperCase(name.charAt(0)) + name.substring(1));
-			ItemIngot f = (ItemIngot) field.get(null);
-
-			if (f == null)
-			{
-				CONFIGURATION.load();
-				field.set(null, new ItemIngot(name, id <= 0 ? getNextItemID() : id));
-				OreDictionary.registerOre(name, new ItemStack((Item) field.get(null)));
-				CONFIGURATION.save();
-			}
-
-			return (Item) field.get(null);
-		}
-		catch (Exception e)
-		{
-			FMLLog.severe("Failed to require ingot: " + name);
-			e.printStackTrace();
-		}
-
-		return null;
-	}
-
-	public static Item requestIngot(String name, int id)
-	{
-		if (OreDictionary.getOres("ingotCopper").size() <= 0)
-		{
-			return requireIngot(name, id);
-		}
-		return null;
-	}
-
-	/**
-	 * Call this after the corresponding ingot is registered.
-	 * 
-	 * @return
-	 */
-	public static ItemStack registerBronzeDust(int id, boolean require)
-	{
-		if (itemDustBronze == null)
-		{
-			String itemName = "dustBronze";
-
-			if (OreDictionary.getOres(itemName).size() <= 0 || require)
-			{
-				BasicComponents.CONFIGURATION.load();
-				itemDustBronze = new ItemBase(itemName, BasicComponents.CONFIGURATION.getItem("Bronze Dust", BasicComponents.ITEM_ID_PREFIX + 8).getInt());
-				OreDictionary.registerOre(itemName, itemDustBronze);
-
-				RecipeHelper.addRecipe(new ShapedOreRecipe(new ItemStack(BasicComponents.itemDustBronze), new Object[] { "!#!", '!', "ingotCopper", '#', "ingotTin" }), "Bronze Dust", BasicComponents.CONFIGURATION, true);
-
-				if (OreDictionary.getOres("ingotBronze").size() > 0)
-				{
-					// Bronze
-					GameRegistry.addSmelting(BasicComponents.itemDustBronze.itemID, OreDictionary.getOres("ingotBronze").get(0), 0.6f);
-				}
-
-				BasicComponents.CONFIGURATION.save();
-			}
-
-		}
-
-		return new ItemStack(itemDustBronze);
-	}
-
-	/**
-	 * Call this after the corresponding ingot is registered.
-	 * 
-	 * @return
-	 */
-	public static ItemStack registerSteelDust(int id, boolean require)
-	{
-		if (itemDustSteel == null)
-		{
-			String itemName = "dustSteel";
-
-			if (OreDictionary.getOres(itemName).size() <= 0 || require)
-			{
-				BasicComponents.CONFIGURATION.load();
-
-				itemDustSteel = new ItemBase(itemName, BasicComponents.CONFIGURATION.getItem("Steel Dust", BasicComponents.ITEM_ID_PREFIX + 9).getInt());
-				OreDictionary.registerOre(itemName, itemDustSteel);
-				RecipeHelper.addRecipe(new ShapedOreRecipe(new ItemStack(BasicComponents.itemDustSteel), new Object[] { " C ", "CIC", " C ", 'C', new ItemStack(Item.coal, 1, 1), 'I', Item.ingotIron }), "Steel Dust", BasicComponents.CONFIGURATION, true);
-				RecipeHelper.addRecipe(new ShapedOreRecipe(new ItemStack(BasicComponents.itemDustSteel), new Object[] { " C ", "CIC", " C ", 'C', new ItemStack(Item.coal, 1, 0), 'I', Item.ingotIron }), "Steel Dust", BasicComponents.CONFIGURATION, true);
-
-				if (OreDictionary.getOres("ingotSteel").size() > 0)
-				{
-					GameRegistry.addSmelting(BasicComponents.itemDustSteel.itemID, OreDictionary.getOres("ingotSteel").get(0), 0.8f);
-				}
-
-				BasicComponents.CONFIGURATION.save();
-			}
-
-		}
-
-		return new ItemStack(itemDustBronze);
+		return new ItemStack(blockMachine);
 	}
 
 	/**
