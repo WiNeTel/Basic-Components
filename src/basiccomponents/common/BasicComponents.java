@@ -242,7 +242,7 @@ public class BasicComponents
 				}
 
 				Item item = (Item) field.get(null);
-				OreDictionary.registerOre(name, new ItemStack(item));
+				OreDictionary.registerOre(name, item);
 				CONFIGURATION.save();
 
 				FMLLog.info("Successfully requested item: " + name);

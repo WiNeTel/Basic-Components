@@ -7,7 +7,6 @@ import org.lwjgl.opengl.GL11;
 
 import basiccomponents.common.BasicComponents;
 import basiccomponents.common.tileentity.TileEntityCopperWire;
-
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 

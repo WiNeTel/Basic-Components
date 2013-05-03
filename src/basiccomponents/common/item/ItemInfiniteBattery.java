@@ -2,12 +2,11 @@ package basiccomponents.common.item;
 
 import java.util.List;
 
-import basiccomponents.common.BasicComponents;
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import universalelectricity.core.electricity.ElectricityPack;
 import universalelectricity.core.item.IItemElectric;
+import basiccomponents.common.BasicComponents;
 
 /**
  * An infinite battery used for players and modders to test things.

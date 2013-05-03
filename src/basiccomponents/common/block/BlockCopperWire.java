@@ -1,13 +1,13 @@
 package basiccomponents.common.block;
 
-import basiccomponents.common.BasicComponents;
-import basiccomponents.common.tileentity.TileEntityCopperWire;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import universalelectricity.prefab.block.BlockConductor;
+import basiccomponents.common.BasicComponents;
+import basiccomponents.common.tileentity.TileEntityCopperWire;
 
 public class BlockCopperWire extends BlockConductor
 {

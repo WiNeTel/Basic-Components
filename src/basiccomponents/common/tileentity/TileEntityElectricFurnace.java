@@ -20,7 +20,6 @@ import universalelectricity.core.item.IItemElectric;
 import universalelectricity.prefab.network.IPacketReceiver;
 import universalelectricity.prefab.network.PacketManager;
 import universalelectricity.prefab.tile.TileEntityElectricityRunnable;
-
 import basiccomponents.common.BasicComponents;
 import basiccomponents.common.block.BlockBasicMachine;
 
@@ -382,19 +381,19 @@ public class TileEntityElectricFurnace extends TileEntityElectricityRunnable imp
 	 * Get the size of the side inventory.
 	 */
 	@Override
-	public int[] getSizeInventorySide(int side)
+	public int[] getAccessibleSlotsFromSide(int side)
 	{
 		return side == 0 ? new int[] { 2 } : (side == 1 ? new int[] { 0, 1 } : new int[] { 0 });
 	}
 
 	@Override
-	public boolean func_102007_a(int slotID, ItemStack par2ItemStack, int par3)
+	public boolean canInsertItem(int slotID, ItemStack par2ItemStack, int par3)
 	{
 		return this.isStackValidForSlot(slotID, par2ItemStack);
 	}
 
 	@Override
-	public boolean func_102008_b(int slotID, ItemStack par2ItemStack, int par3)
+	public boolean canExtractItem(int slotID, ItemStack par2ItemStack, int par3)
 	{
 		return slotID == 2;
 	}

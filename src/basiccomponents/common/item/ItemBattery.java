@@ -1,9 +1,9 @@
 package basiccomponents.common.item;
 
-import basiccomponents.common.BasicComponents;
 import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.item.ItemStack;
 import universalelectricity.core.item.ItemElectric;
+import basiccomponents.common.BasicComponents;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 

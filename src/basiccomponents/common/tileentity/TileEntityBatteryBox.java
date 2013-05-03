@@ -24,7 +24,6 @@ import universalelectricity.core.vector.VectorHelper;
 import universalelectricity.prefab.network.IPacketReceiver;
 import universalelectricity.prefab.network.PacketManager;
 import universalelectricity.prefab.tile.TileEntityElectricityStorage;
-
 import basiccomponents.common.BasicComponents;
 import basiccomponents.common.block.BlockBasicMachine;
 
@@ -294,13 +293,13 @@ public class TileEntityBatteryBox extends TileEntityElectricityStorage implement
 	}
 
 	@Override
-	public int[] getSizeInventorySide(int slotID)
+	public int[] getAccessibleSlotsFromSide(int slotID)
 	{
 		return new int[] { 0, 1 };
 	}
 
 	@Override
-	public boolean func_102007_a(int slotID, ItemStack itemstack, int side)
+	public boolean canInsertItem(int slotID, ItemStack itemstack, int side)
 	{
 		if (this.isStackValidForSlot(slotID, itemstack))
 		{
@@ -317,7 +316,7 @@ public class TileEntityBatteryBox extends TileEntityElectricityStorage implement
 	}
 
 	@Override
-	public boolean func_102008_b(int slotID, ItemStack itemstack, int side)
+	public boolean canExtractItem(int slotID, ItemStack itemstack, int side)
 	{
 		if (this.isStackValidForSlot(slotID, itemstack))
 		{

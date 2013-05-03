@@ -2,13 +2,12 @@ package basiccomponents.common.item;
 
 import java.util.List;
 
-import basiccomponents.common.tileentity.TileEntityCopperWire;
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import universalelectricity.core.electricity.ElectricityDisplay;
 import universalelectricity.core.electricity.ElectricityDisplay.ElectricUnit;
+import basiccomponents.common.tileentity.TileEntityCopperWire;
 
 public class ItemBlockCopperWire extends ItemBlock
 {

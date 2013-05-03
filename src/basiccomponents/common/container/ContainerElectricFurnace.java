@@ -1,6 +1,5 @@
 package basiccomponents.common.container;
 
-import basiccomponents.common.tileentity.TileEntityElectricFurnace;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
@@ -10,6 +9,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.FurnaceRecipes;
 import universalelectricity.core.item.IItemElectric;
 import universalelectricity.prefab.SlotSpecific;
+import basiccomponents.common.tileentity.TileEntityElectricFurnace;
 
 public class ContainerElectricFurnace extends Container
 {

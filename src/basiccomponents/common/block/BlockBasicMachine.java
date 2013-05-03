@@ -3,11 +3,6 @@ package basiccomponents.common.block;
 import java.util.List;
 import java.util.Random;
 
-import basiccomponents.common.BasicComponents;
-import basiccomponents.common.tileentity.TileEntityBatteryBox;
-import basiccomponents.common.tileentity.TileEntityCoalGenerator;
-import basiccomponents.common.tileentity.TileEntityElectricFurnace;
-
 import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLiving;
@@ -22,6 +17,10 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeDirection;
 import universalelectricity.core.UniversalElectricity;
 import universalelectricity.prefab.block.BlockAdvanced;
+import basiccomponents.common.BasicComponents;
+import basiccomponents.common.tileentity.TileEntityBatteryBox;
+import basiccomponents.common.tileentity.TileEntityCoalGenerator;
+import basiccomponents.common.tileentity.TileEntityElectricFurnace;
 
 public class BlockBasicMachine extends BlockAdvanced
 {
