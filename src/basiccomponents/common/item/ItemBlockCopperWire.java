@@ -19,12 +19,6 @@ public class ItemBlockCopperWire extends ItemBlock
 	}
 
 	@Override
-	public int getMetadata(int damage)
-	{
-		return damage;
-	}
-
-	@Override
 	public void addInformation(ItemStack par1ItemStack, EntityPlayer par2EntityPlayer, List par3List, boolean par4)
 	{
 		par3List.add("Resistance: " + ElectricityDisplay.getDisplay(TileEntityCopperWire.RESISTANCE, ElectricUnit.RESISTANCE));

@@ -2,7 +2,7 @@ package basiccomponents.common.block;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.client.renderer.texture.IconRegister;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import universalelectricity.prefab.block.BlockConductor;
@@ -13,20 +13,14 @@ public class BlockCopperWire extends BlockConductor
 {
 	public BlockCopperWire(int id)
 	{
-		super(id, Material.cloth);
-		this.setUnlocalizedName("copperWire");
+		super(BasicComponents.CONFIGURATION.getItem("copperWire", id).getInt(id), Material.cloth);
+		this.setUnlocalizedName(BasicComponents.TEXTURE_NAME_PREFIX + "copperWire");
 		this.setStepSound(soundClothFootstep);
 		this.setResistance(0.2F);
 		this.setHardness(0.1f);
 		this.setBlockBounds(0.30F, 0.30F, 0.30F, 0.70F, 0.70F, 0.70F);
-		this.setCreativeTab(BasicComponents.TAB);
+		this.setCreativeTab(CreativeTabs.tabRedstone);
 		Block.setBurnProperties(this.blockID, 30, 60);
-	}
-
-	@Override
-	public void registerIcons(IconRegister par1IconRegister)
-	{
-		this.blockIcon = par1IconRegister.registerIcon(BasicComponents.TEXTURE_NAME_PREFIX + this.getUnlocalizedName2());
 	}
 
 	/**

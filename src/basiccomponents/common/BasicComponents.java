@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.FurnaceRecipes;
 import net.minecraftforge.common.Configuration;
 import net.minecraftforge.oredict.OreDictionary;
 import net.minecraftforge.oredict.ShapedOreRecipe;
@@ -20,12 +20,13 @@ import universalelectricity.prefab.ore.OreGenBase;
 import universalelectricity.prefab.ore.OreGenReplaceStone;
 import universalelectricity.prefab.ore.OreGenerator;
 import basiccomponents.client.RenderCopperWire;
-import basiccomponents.common.block.BlockBCOre;
+import basiccomponents.common.block.BlockBase;
 import basiccomponents.common.block.BlockBasicMachine;
+import basiccomponents.common.block.BlockCopperWire;
 import basiccomponents.common.item.ItemBase;
 import basiccomponents.common.item.ItemBattery;
-import basiccomponents.common.item.ItemBlockBCOre;
 import basiccomponents.common.item.ItemBlockBasicMachine;
+import basiccomponents.common.item.ItemBlockCopperWire;
 import basiccomponents.common.item.ItemInfiniteBattery;
 import basiccomponents.common.item.ItemIngot;
 import basiccomponents.common.item.ItemPlate;
@@ -34,13 +35,12 @@ import basiccomponents.common.tileentity.TileEntityCoalGenerator;
 import basiccomponents.common.tileentity.TileEntityCopperWire;
 import basiccomponents.common.tileentity.TileEntityElectricFurnace;
 import cpw.mods.fml.client.registry.ClientRegistry;
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.ReflectionHelper;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
 /**
  * The main class for managing Basic Component items and blocks. Reference objects from this class
@@ -52,7 +52,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class BasicComponents
 {
 	public static final String NAME = "Basic Components";
-	public static final String CHANNEL = "BasicComponents";
+	public static String CHANNEL = "";
 
 	public static final String RESOURCE_PATH = "/mods/basiccomponents/";
 
@@ -60,8 +60,6 @@ public class BasicComponents
 	 * The Universal Electricity configuration file.
 	 */
 	public static final Configuration CONFIGURATION = new Configuration(new File(Loader.instance().getConfigDir(), "BasicComponents.cfg"));
-
-	public static CreativeTabs TAB;
 
 	@SidedProxy(clientSide = "basiccomponents.client.ClientProxy", serverSide = "basiccomponents.common.CommonProxy")
 	public static CommonProxy proxy;
@@ -77,7 +75,8 @@ public class BasicComponents
 	public static final String LANGUAGE_PATH = RESOURCE_PATH + "languages/";
 	private static final String[] LANGUAGES_SUPPORTED = new String[] { "en_US", "zh_CN", "es_ES", "it_IT", "nl_NL", "de_DE" };
 
-	public static Block blockBasicOre;
+	public static Block blockOreCopper;
+	public static Block blockOreTin;
 	public static Block blockCopperWire;
 	public static Block blockMachine;
 
@@ -93,7 +92,7 @@ public class BasicComponents
 	public static Item itemPlateCopper;
 	public static Item itemPlateTin;
 	public static Item itemPlateBronze;
-	public static Item itemPlateStee;
+	public static Item itemPlateSteel;
 	public static Item itemPlateIron;
 	public static Item itemPlateGold;
 
@@ -105,14 +104,11 @@ public class BasicComponents
 	public static Item itemDustSteel;
 	public static Item itemDustBronze;
 
-	public static OreGenBase copperOreGeneration;
-	public static OreGenBase tinOreGeneration;
+	public static OreGenBase generationOreCopper, generationOreTin;
 
 	public static boolean INITIALIZED = false;
-	public static boolean REGISTER_RECIPES = false;
 
 	private static boolean registeredTileEntities = false;
-	private static boolean registeredTileEntityRenderers = false;
 
 	public static final ArrayList bcDependants = new ArrayList();
 
@@ -147,12 +143,18 @@ public class BasicComponents
 	}
 
 	/**
-	 * Creates a specific Basic Component item. Require ingots first before dusts to register
-	 * recipes correctly.
+	 * Call all of this in Init stage. Use "requestItem" or "requestBlock" instead to make it so
+	 * then if another mod adds in a item with the same name, it will use that mod's item instead.
+	 * 
+	 * Creates a specific Basic Component item/Block.
+	 * 
+	 * If you want correct recipes, make sure you register required items in the following order:
+	 * 
+	 * Ingot, Ores, Dust, Plate, Copper Wire, Circuits, Motor, Wrench
 	 * 
 	 * @param name - Name of the item: e.g ingotCopper, ingotSteel
 	 * @param id - The specified ID of the item. Use 0 for a default value to be used.
-	 * @return The Item class.
+	 * @return The Item/Block class.
 	 */
 	public static Item requireItem(String name, int id)
 	{
@@ -176,15 +178,28 @@ public class BasicComponents
 					field.set(null, new ItemPlate(name, id <= 0 ? getNextItemID() : id));
 					Item item = (Item) field.get(null);
 
-					GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), "!!", "!!", '!', name.replaceAll("plate", "ingot")));
+					String ingotName = name.replaceAll("plate", "ingot");
+					GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), "!!", "!!", '!', ingotName));
+
+					Item itemIngot = null;
+
+					if (OreDictionary.getOres(ingotName).size() > 0)
+					{
+						itemIngot = OreDictionary.getOres(ingotName).get(0).getItem();
+					}
 
 					if (name.equals("plateIron"))
 					{
-						GameRegistry.addRecipe(new ShapelessOreRecipe(Item.ingotIron, item));
+						itemIngot = Item.ingotIron;
 					}
 					else if (name.equals("plateGold"))
 					{
-						GameRegistry.addRecipe(new ShapelessOreRecipe(Item.ingotGold, item));
+						itemIngot = Item.ingotGold;
+					}
+
+					if (itemIngot != null)
+					{
+						GameRegistry.addRecipe(new ShapelessOreRecipe(new ItemStack(itemIngot, 4), item));
 					}
 				}
 				else if (name.contains("dust"))
@@ -210,42 +225,62 @@ public class BasicComponents
 							GameRegistry.addSmelting(item.itemID, OreDictionary.getOres("ingotSteel").get(0), 0.8f);
 						}
 					}
-
 				}
 				else
 				{
 					field.set(null, new ItemBase(name, id <= 0 ? getNextItemID() : id).setCreativeTab(CreativeTabs.tabMaterials));
 					Item item = (Item) field.get(null);
 
-					if (name.equals("basicCircuit"))
+					if (name.equals("circuitBasic"))
 					{
-						GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), "!#!", "#@#", "!#!", '@', "plateBronze", '#', Item.redstone, '!', "copperWire"));
-						GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), "!#!", "#@#", "!#!", '@', "plateSteel", '#', Item.redstone, '!', "copperWire"));
+						if (OreDictionary.getOres("copperWire").size() > 0)
+						{
+							GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), "!#!", "#@#", "!#!", '@', "plateBronze", '#', Item.redstone, '!', "copperWire"));
+							GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), "!#!", "#@#", "!#!", '@', "plateSteel", '#', Item.redstone, '!', "copperWire"));
+						}
+						else
+						{
+							GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), "!#!", "#@#", "!#!", '@', "plateBronze", '#', Item.redstone, '!', Block.redstoneComparatorIdle));
+							GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), "!#!", "#@#", "!#!", '@', "plateSteel", '#', Item.redstone, '!', Block.redstoneComparatorIdle));
+						}
 					}
-					else if (name.equals("advancedCircuit"))
+					else if (name.equals("circuitAdvanced"))
 					{
-						GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), "@@@", "#?#", "@@@", '@', Item.redstone, '?', Item.diamond, '#', "basicCircuit"));
+						GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), "@@@", "#?#", "@@@", '@', Item.redstone, '?', Item.diamond, '#', "circuitBasic"));
 					}
-					else if (name.equals("eliteCircuit"))
+					else if (name.equals("circuitElite"))
 					{
-						GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), "@@@", "?#?", "@@@", '@', Item.ingotGold, '?', "advancedCircuit", '#', Block.blockLapis));
+						GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), "@@@", "?#?", "@@@", '@', Item.ingotGold, '?', "circuitAdvanced", '#', Block.blockLapis));
 					}
 					else if (name.equals("wrench"))
 					{
-						GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), " S ", " SS", "S  ", 'S', "ingotSteel"));
+						if (OreDictionary.getOres("ingotSteel").size() > 0)
+						{
+							GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), " S ", " SS", "S  ", 'S', "ingotSteel"));
+						}
+						else
+						{
+							GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), " S ", " SS", "S  ", 'S', Item.ingotIron));
+						}
 					}
 					else if (name.equals("motor"))
 					{
-						GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), "@!@", "!#!", "@!@", '!', "ingotSteel", '#', Item.ingotIron, '@', "copperWire"));
+						if (OreDictionary.getOres("copperWire").size() > 0)
+						{
+							GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), "@!@", "!#!", "@!@", '!', "ingotSteel", '#', Item.ingotIron, '@', "copperWire"));
+						}
+						else
+						{
+							GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), "@!@", "!#!", "@!@", '!', "ingotSteel", '#', Item.ingotIron, '@', Block.redstoneComparatorIdle));
+						}
 					}
-
 				}
 
 				Item item = (Item) field.get(null);
 				OreDictionary.registerOre(name, item);
 				CONFIGURATION.save();
 
-				FMLLog.info("Successfully requested item: " + name);
+				FMLLog.info("Basic Components: Successfully requested item: " + name);
 				return item;
 			}
 
@@ -253,7 +288,7 @@ public class BasicComponents
 		}
 		catch (Exception e)
 		{
-			FMLLog.severe("Failed to require ingot: " + name);
+			FMLLog.severe("Basic Components: Failed to require ingot: " + name);
 			e.printStackTrace();
 		}
 
@@ -267,70 +302,94 @@ public class BasicComponents
 			return requireItem(name, id);
 		}
 
+		FMLLog.info("Basic Components: " + name + " already exists in Ore Dictionary, using the ore instead.");
+
+		return OreDictionary.getOres(name).get(0).getItem();
+	}
+
+	public static Block requireBlock(String name, int id)
+	{
+		init();
+
+		try
+		{
+			Field field = ReflectionHelper.findField(BasicComponents.class, "block" + Character.toUpperCase(name.charAt(0)) + name.substring(1));
+			Block f = (Block) field.get(null);
+
+			if (f == null)
+			{
+				CONFIGURATION.load();
+
+				if (name.equals("copperWire"))
+				{
+					field.set(null, new BlockCopperWire(id <= 0 ? getNextBlockID() : id));
+					GameRegistry.registerBlock((Block) field.get(null), ItemBlockCopperWire.class, name);
+
+					GameRegistry.registerTileEntity(TileEntityCopperWire.class, "copperWire");
+
+					if (FMLCommonHandler.instance().getEffectiveSide().isClient())
+					{
+						ClientRegistry.bindTileEntitySpecialRenderer(TileEntityCopperWire.class, new RenderCopperWire());
+					}
+
+					// proxy.registerCopperWireTileEntity();
+
+					GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(blockCopperWire, 6), new Object[] { "WWW", "CCC", "WWW", 'W', Block.cloth, 'C', "ingotCopper" }));
+
+					UniversalElectricity.isNetworkActive = true;
+				}
+				else if (name.contains("ore"))
+				{
+					field.set(null, new BlockBase(name, id <= 0 ? getNextBlockID() : id));
+					Block block = (Block) field.get(null);
+					GameRegistry.registerBlock(block, name);
+
+					String ingotName = name.replaceAll("ore", "ingot");
+
+					if (OreDictionary.getOres(ingotName).size() > 0)
+					{
+						GameRegistry.addSmelting(block.blockID, OreDictionary.getOres(ingotName).get(0), 0.6f);
+					}
+
+					Field generationField = ReflectionHelper.findField(BasicComponents.class, "generation" + Character.toUpperCase(name.charAt(0)) + name.substring(1));
+					generationField.set(null, new OreGenReplaceStone(name, name, new ItemStack(block), 60, 22, 4).enable(BasicComponents.CONFIGURATION));
+					OreGenerator.addOre((OreGenReplaceStone) generationField.get(null));
+				}
+
+				Block block = (Block) field.get(null);
+				OreDictionary.registerOre(name, block);
+				CONFIGURATION.save();
+
+				FMLLog.info("Basic Components: Successfully requested block: " + name);
+				return block;
+			}
+
+			return f;
+		}
+		catch (Exception e)
+		{
+			FMLLog.severe("Basic Components: Failed to require ingot: " + name);
+			e.printStackTrace();
+		}
+
 		return null;
 	}
 
-	/**
-	 * Call this function in your mod init stage, after all the appropriate blocks are registered.
-	 */
-	public static void register(Object modInstance)
+	public static Block requestBlock(String name, int id)
 	{
-		bcDependants.add(modInstance);
-
-		if (!REGISTER_RECIPES)
+		if (OreDictionary.getOres(name).size() <= 0)
 		{
-			/**
-			 * Register Recipes
-			 */
-			// Copper
-			if (blockBasicOre != null)
-			{
-				FurnaceRecipes.smelting().addSmelting(BasicComponents.blockBasicOre.blockID, 0, OreDictionary.getOres("ingotCopper").get(0), 0.7f);
-			}
-
-			// Tin
-			if (blockBasicOre != null)
-			{
-				FurnaceRecipes.smelting().addSmelting(BasicComponents.blockBasicOre.blockID, 1, OreDictionary.getOres("ingotTin").get(0), 0.7f);
-			}
-
-			if (blockCopperWire != null)
-			{
-				// Sets the network status as active.
-				UniversalElectricity.isNetworkActive = true;
-				// Copper Wire
-				GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(blockCopperWire, 6), new Object[] { "!!!", "@@@", "!!!", '!', Block.cloth, '@', "ingotCopper" }));
-			}
+			return requireBlock(name, id);
 		}
 
-		REGISTER_RECIPES = true;
-	}
+		FMLLog.info("Basic Components: " + name + " already exists in Ore Dictionary, using the ore instead.");
 
-	public static ItemStack registerOres(int id, boolean require)
-	{
-		BasicComponents.CONFIGURATION.load();
-
-		if (blockBasicOre == null)
+		if (OreDictionary.getOres(name).get(0).getItem() instanceof ItemBlock)
 		{
-			blockBasicOre = new BlockBCOre(BasicComponents.CONFIGURATION.getBlock("Ore", BasicComponents.BLOCK_ID_PREFIX + 0).getInt());
-			GameRegistry.registerBlock(BasicComponents.blockBasicOre, ItemBlockBCOre.class, "Ore");
+			return Block.blocksList[((ItemBlock) OreDictionary.getOres(name).get(0).getItem()).getBlockID()];
 		}
 
-		if (copperOreGeneration == null)
-		{
-			copperOreGeneration = new OreGenReplaceStone("Copper Ore", "oreCopper", new ItemStack(BasicComponents.blockBasicOre, 1, 0), 60, 23, 4).enable(BasicComponents.CONFIGURATION);
-			OreGenerator.addOre(BasicComponents.copperOreGeneration);
-		}
-
-		if (tinOreGeneration == null)
-		{
-			tinOreGeneration = new OreGenReplaceStone("Tin Ore", "oreTin", new ItemStack(BasicComponents.blockBasicOre, 1, 1), 60, 19, 4).enable(BasicComponents.CONFIGURATION);
-			OreGenerator.addOre(BasicComponents.tinOreGeneration);
-		}
-
-		BasicComponents.CONFIGURATION.save();
-
-		return new ItemStack(blockBasicOre);
+		return null;
 	}
 
 	public static ItemStack registerBattery(int id)
@@ -338,7 +397,7 @@ public class BasicComponents
 		if (itemBattery == null)
 		{
 			BasicComponents.CONFIGURATION.load();
-			itemBattery = new ItemBattery(BasicComponents.CONFIGURATION.getItem("Battery", BasicComponents.ITEM_ID_PREFIX + 1).getInt());
+			itemBattery = new ItemBattery(BasicComponents.CONFIGURATION.getItem("Battery", id <= 0 ? getNextItemID() : id).getInt(id));
 			// Battery
 			GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(itemBattery), " T ", "TRT", "TCT", 'T', "ingotTin", 'R', Item.redstone, 'C', Item.coal));
 			OreDictionary.registerOre("battery", ElectricItemHelper.getUncharged(BasicComponents.itemBattery));
@@ -353,7 +412,7 @@ public class BasicComponents
 		if (itemInfiniteBattery == null)
 		{
 			BasicComponents.CONFIGURATION.load();
-			itemInfiniteBattery = new ItemInfiniteBattery(BasicComponents.CONFIGURATION.getItem("Infinite Battery", BasicComponents.ITEM_ID_PREFIX + 0).getInt());
+			itemInfiniteBattery = new ItemInfiniteBattery(BasicComponents.CONFIGURATION.getItem("Infinite Battery", id <= 0 ? getNextItemID() : id).getInt(id));
 			OreDictionary.registerOre("batteryInfinite", ElectricItemHelper.getUncharged(itemInfiniteBattery));
 			BasicComponents.CONFIGURATION.save();
 		}
@@ -366,7 +425,7 @@ public class BasicComponents
 		if (blockMachine == null)
 		{
 			BasicComponents.CONFIGURATION.load();
-			BasicComponents.blockMachine = new BlockBasicMachine(BasicComponents.CONFIGURATION.getBlock("Basic Machine", BasicComponents.BLOCK_ID_PREFIX + 4).getInt(), 0);
+			BasicComponents.blockMachine = new BlockBasicMachine(BasicComponents.CONFIGURATION.getBlock("Basic Machine", id <= 0 ? getNextBlockID() : id).getInt(id), 0);
 			GameRegistry.registerBlock(BasicComponents.blockMachine, ItemBlockBasicMachine.class, "Basic Machine");
 			// Battery Box
 			GameRegistry.addRecipe(new ShapedOreRecipe(OreDictionary.getOres("batteryBox").get(0), new Object[] { "SSS", "BBB", "SSS", 'B', ElectricItemHelper.getUncharged(BasicComponents.itemBattery), 'S', "ingotSteel" }));
@@ -397,24 +456,14 @@ public class BasicComponents
 			GameRegistry.registerTileEntity(TileEntityBatteryBox.class, "UEBatteryBox");
 			GameRegistry.registerTileEntity(TileEntityCoalGenerator.class, "UECoalGenerator");
 			GameRegistry.registerTileEntity(TileEntityElectricFurnace.class, "UEElectricFurnace");
-			GameRegistry.registerTileEntity(TileEntityCopperWire.class, "UECopperWire");
 			registeredTileEntities = true;
 		}
 	}
 
-	/**
-	 * Call this in your client proxy to bind copper wire renderer
-	 * 
-	 * @return
-	 */
-	@SideOnly(Side.CLIENT)
-	public static void registerTileEntityRenderers()
+	public static void register(Object mod, String channel)
 	{
-		if (!registeredTileEntityRenderers)
-		{
-			ClientRegistry.bindTileEntitySpecialRenderer(TileEntityCopperWire.class, new RenderCopperWire());
-			registeredTileEntityRenderers = true;
-		}
+		bcDependants.add(mod);
+		CHANNEL = channel;
 	}
 
 	public static Object getFirstDependant()

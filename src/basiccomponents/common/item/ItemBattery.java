@@ -1,6 +1,7 @@
 package basiccomponents.common.item;
 
 import net.minecraft.client.renderer.texture.IconRegister;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.ItemStack;
 import universalelectricity.core.item.ItemElectric;
 import basiccomponents.common.BasicComponents;
@@ -13,7 +14,7 @@ public class ItemBattery extends ItemElectric
 	{
 		super(id);
 		this.setUnlocalizedName("battery");
-		this.setCreativeTab(BasicComponents.TAB);
+		this.setCreativeTab(CreativeTabs.tabRedstone);
 	}
 
 	@SideOnly(Side.CLIENT)

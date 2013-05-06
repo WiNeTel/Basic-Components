@@ -1,23 +1,19 @@
 package basiccomponents.client;
 
-import basiccomponents.common.BasicComponents;
 import basiccomponents.common.CommonProxy;
+import basiccomponents.common.tileentity.TileEntityCopperWire;
+import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
 public class ClientProxy extends CommonProxy
 {
-	@Override
-	public void preInit()
-	{
-
-	}
 
 	@Override
-	public void init()
+	public void registerCopperWireTileEntity()
 	{
-		super.init();
-		BasicComponents.registerTileEntityRenderers();
+		super.registerCopperWireTileEntity();
+		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityCopperWire.class, new RenderCopperWire());
 	}
 }

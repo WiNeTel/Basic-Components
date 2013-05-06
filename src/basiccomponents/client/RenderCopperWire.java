@@ -13,14 +13,9 @@ import cpw.mods.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public class RenderCopperWire extends TileEntitySpecialRenderer
 {
-	private ModelCopperWire model;
+	public static final ModelCopperWire model = new ModelCopperWire();
 
-	public RenderCopperWire()
-	{
-		model = new ModelCopperWire();
-	}
-
-	public void renderAModelAt(TileEntityCopperWire tileEntity, double d, double d1, double d2, float f)
+	public void renderModelAt(TileEntityCopperWire tileEntity, double d, double d1, double d2, float f)
 	{
 		// Texture file
 		this.bindTextureByName(BasicComponents.MODEL_TEXTURE_DIRECTORY + "copperWire.png");
@@ -65,6 +60,6 @@ public class RenderCopperWire extends TileEntitySpecialRenderer
 	@Override
 	public void renderTileEntityAt(TileEntity tileEntity, double var2, double var4, double var6, float var8)
 	{
-		this.renderAModelAt((TileEntityCopperWire) tileEntity, var2, var4, var6, var8);
+		this.renderModelAt((TileEntityCopperWire) tileEntity, var2, var4, var6, var8);
 	}
 }

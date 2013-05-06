@@ -40,7 +40,7 @@ public class BlockBasicMachine extends BlockAdvanced
 	{
 		super(id, UniversalElectricity.machine);
 		this.setUnlocalizedName("bcMachine");
-		this.setCreativeTab(BasicComponents.TAB);
+		this.setCreativeTab(CreativeTabs.tabDecorations);
 		this.setStepSound(soundMetalFootstep);
 	}
 
