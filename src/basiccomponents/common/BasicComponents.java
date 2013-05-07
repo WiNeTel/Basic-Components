@@ -30,6 +30,7 @@ import basiccomponents.common.item.ItemBlockCopperWire;
 import basiccomponents.common.item.ItemInfiniteBattery;
 import basiccomponents.common.item.ItemIngot;
 import basiccomponents.common.item.ItemPlate;
+import basiccomponents.common.item.ItemWrench;
 import basiccomponents.common.tileentity.TileEntityBatteryBox;
 import basiccomponents.common.tileentity.TileEntityCoalGenerator;
 import basiccomponents.common.tileentity.TileEntityCopperWire;
@@ -39,6 +40,7 @@ import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.SidedProxy;
+import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.ReflectionHelper;
 
@@ -226,6 +228,20 @@ public class BasicComponents
 						}
 					}
 				}
+				else if (name.equals("wrench"))
+				{
+					field.set(null, new ItemWrench(id <= 0 ? getNextItemID() : id));
+					Item item = (Item) field.get(null);
+
+					if (OreDictionary.getOres("ingotSteel").size() > 0)
+					{
+						GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), " S ", " SS", "S  ", 'S', "ingotSteel"));
+					}
+					else
+					{
+						GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), " S ", " SS", "S  ", 'S', Item.ingotIron));
+					}
+				}
 				else
 				{
 					field.set(null, new ItemBase(name, id <= 0 ? getNextItemID() : id).setCreativeTab(CreativeTabs.tabMaterials));
@@ -251,17 +267,6 @@ public class BasicComponents
 					else if (name.equals("circuitElite"))
 					{
 						GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), "@@@", "?#?", "@@@", '@', Item.ingotGold, '?', "circuitAdvanced", '#', Block.blockLapis));
-					}
-					else if (name.equals("wrench"))
-					{
-						if (OreDictionary.getOres("ingotSteel").size() > 0)
-						{
-							GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), " S ", " SS", "S  ", 'S', "ingotSteel"));
-						}
-						else
-						{
-							GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), " S ", " SS", "S  ", 'S', Item.ingotIron));
-						}
 					}
 					else if (name.equals("motor"))
 					{
@@ -297,14 +302,19 @@ public class BasicComponents
 
 	public static Item requestItem(String name, int id)
 	{
-		if (OreDictionary.getOres(name).size() <= 0)
+		if (OreDictionary.getOres(name).size() <= 0 && !(name.equals("wrench") && Loader.isModLoaded("BuildCraft|Core")))
 		{
 			return requireItem(name, id);
 		}
 
 		FMLLog.info("Basic Components: " + name + " already exists in Ore Dictionary, using the ore instead.");
 
-		return OreDictionary.getOres(name).get(0).getItem();
+		if (OreDictionary.getOres(name).size() > 0)
+		{
+			return OreDictionary.getOres(name).get(0).getItem();
+		}
+
+		return null;
 	}
 
 	public static Block requireBlock(String name, int id)
@@ -390,7 +400,7 @@ public class BasicComponents
 		return null;
 	}
 
-	public static ItemStack registerBattery(int id)
+	public static ItemStack requireBattery(int id)
 	{
 		if (itemBattery == null)
 		{
@@ -405,7 +415,7 @@ public class BasicComponents
 		return new ItemStack(itemBattery);
 	}
 
-	public static ItemStack registerInfiniteBattery(int id)
+	public static ItemStack requireInfiniteBattery(int id)
 	{
 		if (itemInfiniteBattery == null)
 		{
@@ -418,7 +428,7 @@ public class BasicComponents
 		return new ItemStack(itemInfiniteBattery);
 	}
 
-	public static ItemStack registerMachines(int id)
+	public static ItemStack requireMachines(int id)
 	{
 		if (blockMachine == null)
 		{
@@ -426,10 +436,10 @@ public class BasicComponents
 			BasicComponents.blockMachine = new BlockBasicMachine(BasicComponents.CONFIGURATION.getBlock("Basic Machine", id <= 0 ? getNextBlockID() : id).getInt(id), 0);
 			GameRegistry.registerBlock(BasicComponents.blockMachine, ItemBlockBasicMachine.class, "Basic Machine");
 			// Battery Box
-			GameRegistry.addRecipe(new ShapedOreRecipe(OreDictionary.getOres("batteryBox").get(0), new Object[] { "SSS", "BBB", "SSS", 'B', ElectricItemHelper.getUncharged(BasicComponents.itemBattery), 'S', "ingotSteel" }));
+			GameRegistry.addRecipe(new ShapedOreRecipe(OreDictionary.getOres("batteryBox").get(0), new Object[] { "SSS", "BBB", "SSS", 'B', "battery", 'S', "ingotSteel" }));
 			// Coal Generator
-			GameRegistry.addRecipe(new ShapedOreRecipe(OreDictionary.getOres("coalGenerator").get(0), new Object[] { "MMM", "MOM", "MCM", 'M', "ingotSteel", 'C', BasicComponents.itemMotor, 'O', Block.furnaceIdle }));
-			GameRegistry.addRecipe(new ShapedOreRecipe(OreDictionary.getOres("coalGenerator").get(0), new Object[] { "MMM", "MOM", "MCM", 'M', "ingotBronze", 'C', BasicComponents.itemMotor, 'O', Block.furnaceIdle }));
+			GameRegistry.addRecipe(new ShapedOreRecipe(OreDictionary.getOres("coalGenerator").get(0), new Object[] { "MMM", "MOM", "MCM", 'M', "ingotSteel", 'C', "motor", 'O', Block.furnaceIdle }));
+			GameRegistry.addRecipe(new ShapedOreRecipe(OreDictionary.getOres("coalGenerator").get(0), new Object[] { "MMM", "MOM", "MCM", 'M', "ingotBronze", 'C', "motor", 'O', Block.furnaceIdle }));
 			// Electric Furnace
 			GameRegistry.addRecipe(new ShapedOreRecipe(OreDictionary.getOres("electricFurnace").get(0), new Object[] { "SSS", "SCS", "SMS", 'S', "ingotSteel", 'C', "circuitAdvanced", 'M', "motor" }));
 
@@ -458,10 +468,91 @@ public class BasicComponents
 		}
 	}
 
+	/**
+	 * Called when all items are registered. Only call once per mod.
+	 */
 	public static void register(Object mod, String channel)
 	{
 		bcDependants.add(mod);
 		CHANNEL = channel;
+
+		if (registeredTileEntities && blockMachine != null)
+		{
+			NetworkRegistry.instance().registerGuiHandler(mod, new BCGuiHandler());
+		}
+
+		/**
+		 * Register Smelting Recipes
+		 * 
+		 * Registers recipes that are dependent on order.
+		 */
+
+		if (itemDustBronze != null)
+		{
+			if (OreDictionary.getOres("ingotBronze").size() > 0)
+			{
+				GameRegistry.addSmelting(itemDustBronze.itemID, OreDictionary.getOres("ingotBronze").get(0), 0.6f);
+			}
+		}
+
+		if (itemDustSteel != null)
+		{
+			if (OreDictionary.getOres("ingotSteel").size() > 0)
+			{
+				GameRegistry.addSmelting(itemDustSteel.itemID, OreDictionary.getOres("ingotSteel").get(0), 0.6f);
+			}
+		}
+
+		// Copper
+		if (blockOreCopper != null)
+		{
+			GameRegistry.addSmelting(blockOreCopper.blockID, OreDictionary.getOres("ingotCopper").get(0), 0.7f);
+		}
+
+		// Tin
+		if (blockOreTin != null)
+		{
+			GameRegistry.addSmelting(blockOreTin.blockID, OreDictionary.getOres("ingotTin").get(0), 0.7f);
+		}
+	}
+
+	/**
+	 * Requests all items in Basic Components
+	 */
+	public static void requestAll()
+	{
+		BasicComponents.requestItem("ingotCopper", 0);
+		BasicComponents.requestItem("ingotTin", 0);
+
+		BasicComponents.requestBlock("oreCopper", 0);
+		BasicComponents.requestBlock("oreTin", 0);
+
+		BasicComponents.requestItem("ingotSteel", 0);
+		BasicComponents.requestItem("dustSteel", 0);
+		BasicComponents.requestItem("plateSteel", 0);
+
+		BasicComponents.requestItem("ingotBronze", 0);
+		BasicComponents.requestItem("dustBronze", 0);
+		BasicComponents.requestItem("plateBronze", 0);
+
+		BasicComponents.requestItem("plateCopper", 0);
+		BasicComponents.requestItem("plateTin", 0);
+		BasicComponents.requestItem("plateIron", 0);
+		BasicComponents.requestItem("plateGold", 0);
+
+		BasicComponents.requestBlock("copperWire", 0);
+
+		BasicComponents.requestItem("circuitBasic", 0);
+		BasicComponents.requestItem("circuitAdvanced", 0);
+		BasicComponents.requestItem("circuitElite", 0);
+
+		BasicComponents.requestItem("motor", 0);
+
+		BasicComponents.requestItem("wrench", 0);
+
+		requireBattery(0);
+		requireInfiniteBattery(0);
+		requireMachines(0);
 	}
 
 	public static Object getFirstDependant()

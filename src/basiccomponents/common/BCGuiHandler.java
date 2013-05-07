@@ -14,11 +14,6 @@ import basiccomponents.common.tileentity.TileEntityCoalGenerator;
 import basiccomponents.common.tileentity.TileEntityElectricFurnace;
 import cpw.mods.fml.common.network.IGuiHandler;
 
-/**
- * Extend this class in your GuiHandler
- * 
- * Be sure to call super.getClientGuiElement and super.getServerGuiElement
- */
 public class BCGuiHandler implements IGuiHandler
 {
 	@Override
@@ -28,14 +23,17 @@ public class BCGuiHandler implements IGuiHandler
 
 		if (tileEntity != null)
 		{
-			switch (ID)
+			if (tileEntity instanceof TileEntityBatteryBox)
 			{
-				case 0:
-					return new GuiBatteryBox(player.inventory, ((TileEntityBatteryBox) tileEntity));
-				case 1:
-					return new GuiCoalGenerator(player.inventory, ((TileEntityCoalGenerator) tileEntity));
-				case 2:
-					return new GuiElectricFurnace(player.inventory, ((TileEntityElectricFurnace) tileEntity));
+				return new GuiBatteryBox(player.inventory, ((TileEntityBatteryBox) tileEntity));
+			}
+			else if (tileEntity instanceof TileEntityCoalGenerator)
+			{
+				return new GuiCoalGenerator(player.inventory, ((TileEntityCoalGenerator) tileEntity));
+			}
+			else if (tileEntity instanceof TileEntityElectricFurnace)
+			{
+				return new GuiElectricFurnace(player.inventory, ((TileEntityElectricFurnace) tileEntity));
 			}
 		}
 
@@ -49,14 +47,17 @@ public class BCGuiHandler implements IGuiHandler
 
 		if (tileEntity != null)
 		{
-			switch (ID)
+			if (tileEntity instanceof TileEntityBatteryBox)
 			{
-				case 0:
-					return new ContainerBatteryBox(player.inventory, ((TileEntityBatteryBox) tileEntity));
-				case 1:
-					return new ContainerCoalGenerator(player.inventory, ((TileEntityCoalGenerator) tileEntity));
-				case 2:
-					return new ContainerElectricFurnace(player.inventory, ((TileEntityElectricFurnace) tileEntity));
+				return new ContainerBatteryBox(player.inventory, ((TileEntityBatteryBox) tileEntity));
+			}
+			else if (tileEntity instanceof TileEntityCoalGenerator)
+			{
+				return new ContainerCoalGenerator(player.inventory, ((TileEntityCoalGenerator) tileEntity));
+			}
+			else if (tileEntity instanceof TileEntityElectricFurnace)
+			{
+				return new ContainerElectricFurnace(player.inventory, ((TileEntityElectricFurnace) tileEntity));
 			}
 		}
 

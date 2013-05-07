@@ -1,6 +1,7 @@
 package basiccomponents.common.item;
 
 import net.minecraft.block.Block;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
@@ -9,10 +10,11 @@ import universalelectricity.prefab.implement.IToolConfigurator;
 
 public class ItemWrench extends ItemBase implements IToolConfigurator
 {
-	public ItemWrench(int id, int texture)
+	public ItemWrench(int id)
 	{
 		super("wrench", id);
 		this.setMaxStackSize(1);
+		this.setCreativeTab(CreativeTabs.tabTools);
 	}
 
 	@Override
