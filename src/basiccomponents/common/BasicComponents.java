@@ -19,7 +19,6 @@ import universalelectricity.prefab.TranslationHelper;
 import universalelectricity.prefab.ore.OreGenBase;
 import universalelectricity.prefab.ore.OreGenReplaceStone;
 import universalelectricity.prefab.ore.OreGenerator;
-import basiccomponents.client.RenderCopperWire;
 import basiccomponents.common.block.BlockBase;
 import basiccomponents.common.block.BlockBasicMachine;
 import basiccomponents.common.block.BlockCopperWire;
@@ -33,10 +32,7 @@ import basiccomponents.common.item.ItemPlate;
 import basiccomponents.common.item.ItemWrench;
 import basiccomponents.common.tileentity.TileEntityBatteryBox;
 import basiccomponents.common.tileentity.TileEntityCoalGenerator;
-import basiccomponents.common.tileentity.TileEntityCopperWire;
 import basiccomponents.common.tileentity.TileEntityElectricFurnace;
-import cpw.mods.fml.client.registry.ClientRegistry;
-import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.SidedProxy;
@@ -334,13 +330,7 @@ public class BasicComponents
 				{
 					field.set(null, new BlockCopperWire(id <= 0 ? getNextBlockID() : id));
 					GameRegistry.registerBlock((Block) field.get(null), ItemBlockCopperWire.class, name);
-
-					GameRegistry.registerTileEntity(TileEntityCopperWire.class, "copperWire");
-
-					if (FMLCommonHandler.instance().getEffectiveSide().isClient())
-					{
-						ClientRegistry.bindTileEntitySpecialRenderer(TileEntityCopperWire.class, new RenderCopperWire());
-					}
+					proxy.registerCopperWireTileEntity();
 
 					GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(blockCopperWire, 6), new Object[] { "WWW", "CCC", "WWW", 'W', Block.cloth, 'C', "ingotCopper" }));
 
