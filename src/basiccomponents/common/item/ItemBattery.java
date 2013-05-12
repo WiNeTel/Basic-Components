@@ -13,7 +13,7 @@ public class ItemBattery extends ItemElectric
 	public ItemBattery(int id)
 	{
 		super(id);
-		this.setUnlocalizedName("battery");
+		this.setUnlocalizedName(BasicComponents.TEXTURE_NAME_PREFIX + "battery");
 		this.setCreativeTab(CreativeTabs.tabRedstone);
 	}
 
@@ -21,7 +21,7 @@ public class ItemBattery extends ItemElectric
 	@Override
 	public void registerIcons(IconRegister iconRegister)
 	{
-		this.itemIcon = iconRegister.registerIcon(this.getUnlocalizedName().replace("item.", BasicComponents.TEXTURE_NAME_PREFIX));
+		this.itemIcon = iconRegister.registerIcon(this.getUnlocalizedName().replace("item.", ""));
 	}
 
 	@Override

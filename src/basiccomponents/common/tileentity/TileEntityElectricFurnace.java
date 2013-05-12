@@ -346,7 +346,7 @@ public class TileEntityElectricFurnace extends TileEntityElectricityRunnable imp
 	@Override
 	public String getInvName()
 	{
-		return LanguageRegistry.instance().getStringLocalization("tile.bcMachine.2.name");
+		return LanguageRegistry.instance().getStringLocalization("tile." + BasicComponents.TEXTURE_NAME_PREFIX + "bcMachine.2.name");
 	}
 
 	@Override
