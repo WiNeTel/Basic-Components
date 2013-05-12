@@ -2,6 +2,8 @@ package basiccomponents.common.item;
 
 import java.util.List;
 
+import basiccomponents.common.BasicComponents;
+
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.ItemStack;
 
@@ -25,7 +27,7 @@ public class ItemCircuit extends ItemBase
 	@Override
 	public String getUnlocalizedName(ItemStack itemStack)
 	{
-		return "item." + TYPES[itemStack.getItemDamage()];
+		return "item." + BasicComponents.TEXTURE_NAME_PREFIX + TYPES[itemStack.getItemDamage()];
 	}
 
 	@Override

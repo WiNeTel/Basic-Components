@@ -259,7 +259,7 @@ public class TileEntityBatteryBox extends TileEntityElectricityStorage implement
 	@Override
 	public String getInvName()
 	{
-		return LanguageRegistry.instance().getStringLocalization("tile.bcMachine.1.name");
+		return LanguageRegistry.instance().getStringLocalization("tile." + BasicComponents.TEXTURE_NAME_PREFIX + "bcMachine.1.name");
 	}
 
 	@Override

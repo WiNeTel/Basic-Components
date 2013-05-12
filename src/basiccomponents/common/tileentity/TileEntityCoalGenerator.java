@@ -313,7 +313,7 @@ public class TileEntityCoalGenerator extends TileEntityElectrical implements IIn
 	@Override
 	public String getInvName()
 	{
-		return LanguageRegistry.instance().getStringLocalization("tile.bcMachine.0.name");
+		return LanguageRegistry.instance().getStringLocalization("tile." + BasicComponents.TEXTURE_NAME_PREFIX + "bcMachine.0.name");
 	}
 
 	@Override
