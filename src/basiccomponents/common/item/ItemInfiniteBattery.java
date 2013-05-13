@@ -16,9 +16,9 @@ import universalelectricity.core.item.IItemElectric;
  */
 public class ItemInfiniteBattery extends ItemBase implements IItemElectric
 {
-	public ItemInfiniteBattery(int id)
+	public ItemInfiniteBattery(String name, int id)
 	{
-		super("infiniteBattery", id);
+		super(name, id);
 		this.setMaxStackSize(1);
 		this.setNoRepair();
 		this.setCreativeTab(CreativeTabs.tabRedstone);

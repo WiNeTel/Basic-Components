@@ -73,34 +73,86 @@ public class BasicComponents
 	public static final String LANGUAGE_PATH = RESOURCE_PATH + "languages/";
 	private static final String[] LANGUAGES_SUPPORTED = new String[] { "en_US", "zh_CN", "es_ES", "it_IT", "nl_NL", "de_DE" };
 
-	public static Block blockOreCopper;
-	public static Block blockOreTin;
-	public static Block blockCopperWire;
-	public static Block blockMachine;
+	/**
+	 * Auto-incrementing configuration IDs. Use this to make sure no config ID is the same.
+	 */
+	public static final int BLOCK_ID_PREFIX = 3970;
+	public static final int ITEM_ID_PREFIX = 13970;
 
+	/**
+	 * Blocks
+	 */
+	public static Block blockOreCopper;
+	public static final int idOreCopper = BLOCK_ID_PREFIX + 0;
+
+	public static Block blockOreTin;
+	public static final int idOreTin = BLOCK_ID_PREFIX + 1;
+
+	public static Block blockCopperWire;
+	public static final int idCopperWire = BLOCK_ID_PREFIX + 2;
+
+	public static Block blockMachine;
+	public static final int idMachine = BLOCK_ID_PREFIX + 3;
+
+	/**
+	 * Items
+	 */
 	public static Item itemBattery;
+	public static final int idBattery = ITEM_ID_PREFIX + 0;
+
 	public static Item itemInfiniteBattery;
+	public static final int idInfiniteBattery = ITEM_ID_PREFIX + 1;
+
 	public static Item itemWrench;
+	public static final int idWrench = ITEM_ID_PREFIX + 2;
+
 	public static Item itemMotor;
+	public static final int idMotor = ITEM_ID_PREFIX + 3;
 
 	public static Item itemCircuitBasic;
+	public static final int idCircuitBasic = ITEM_ID_PREFIX + 4;
+
 	public static Item itemCircuitAdvanced;
+	public static final int idCircuitAdvanced = ITEM_ID_PREFIX + 5;
+
 	public static Item itemCircuitElite;
+	public static final int idCircuitElite = ITEM_ID_PREFIX + 6;
 
 	public static Item itemPlateCopper;
+	public static final int idPlateCopper = ITEM_ID_PREFIX + 7;
+
 	public static Item itemPlateTin;
+	public static final int idPlateTin = ITEM_ID_PREFIX + 8;
+
 	public static Item itemPlateBronze;
+	public static final int idPlateBronze = ITEM_ID_PREFIX + 9;
+
 	public static Item itemPlateSteel;
+	public static final int idPlateSteel = ITEM_ID_PREFIX + 10;
+
 	public static Item itemPlateIron;
+	public static final int idPlateIron = ITEM_ID_PREFIX + 11;
+
 	public static Item itemPlateGold;
+	public static final int idPlateGold = ITEM_ID_PREFIX + 12;
 
 	public static Item itemIngotCopper;
+	public static final int idIngotCopper = ITEM_ID_PREFIX + 13;
+
 	public static Item itemIngotTin;
+	public static final int idIngotTin = ITEM_ID_PREFIX + 14;
+
 	public static Item itemIngotSteel;
+	public static final int idIngotSteel = ITEM_ID_PREFIX + 15;
+
 	public static Item itemIngotBronze;
+	public static final int idIngotBronze = ITEM_ID_PREFIX + 16;
 
 	public static Item itemDustSteel;
+	public static final int idDustSteel = ITEM_ID_PREFIX + 17;
+
 	public static Item itemDustBronze;
+	public static final int idDustBronze = ITEM_ID_PREFIX + 18;
 
 	public static OreGenBase generationOreCopper, generationOreTin;
 
@@ -110,26 +162,8 @@ public class BasicComponents
 
 	public static final ArrayList bcDependants = new ArrayList();
 
-	/**
-	 * Auto-incrementing configuration IDs. Use this to make sure no config ID is the same.
-	 */
-	public static final int BLOCK_ID_PREFIX = 3970;
-	public static final int ITEM_ID_PREFIX = 13970;
-
 	private static int NEXT_BLOCK_ID = BLOCK_ID_PREFIX;
 	private static int NEXT_ITEM_ID = ITEM_ID_PREFIX;
-
-	public static int getNextBlockID()
-	{
-		NEXT_BLOCK_ID++;
-		return NEXT_BLOCK_ID;
-	}
-
-	public static int getNextItemID()
-	{
-		NEXT_ITEM_ID++;
-		return NEXT_ITEM_ID;
-	}
 
 	public static void init()
 	{
@@ -163,17 +197,20 @@ public class BasicComponents
 			Field field = ReflectionHelper.findField(BasicComponents.class, "item" + Character.toUpperCase(name.charAt(0)) + name.substring(1));
 			Item f = (Item) field.get(null);
 
+			Field idField = ReflectionHelper.findField(BasicComponents.class, "id" + Character.toUpperCase(name.charAt(0)) + name.substring(1));
+			id = id <= 0 ? (Integer) idField.get(null) : id;
+
 			if (f == null)
 			{
 				CONFIGURATION.load();
 
 				if (name.contains("ingot"))
 				{
-					field.set(null, new ItemIngot(name, id <= 0 ? getNextItemID() : id));
+					field.set(null, new ItemIngot(name, id));
 				}
 				else if (name.contains("plate"))
 				{
-					field.set(null, new ItemPlate(name, id <= 0 ? getNextItemID() : id));
+					field.set(null, new ItemPlate(name, id));
 					Item item = (Item) field.get(null);
 
 					String ingotName = name.replaceAll("plate", "ingot");
@@ -202,7 +239,7 @@ public class BasicComponents
 				}
 				else if (name.contains("dust"))
 				{
-					field.set(null, new ItemBase(name, id <= 0 ? getNextItemID() : id).setCreativeTab(CreativeTabs.tabMaterials));
+					field.set(null, new ItemBase(name, id).setCreativeTab(CreativeTabs.tabMaterials));
 					Item item = (Item) field.get(null);
 
 					if (name.equals("dustBronze"))
@@ -226,7 +263,7 @@ public class BasicComponents
 				}
 				else if (name.equals("wrench"))
 				{
-					field.set(null, new ItemWrench(id <= 0 ? getNextItemID() : id));
+					field.set(null, new ItemWrench(id));
 					Item item = (Item) field.get(null);
 
 					if (OreDictionary.getOres("ingotSteel").size() > 0)
@@ -238,9 +275,21 @@ public class BasicComponents
 						GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(item), " S ", " SS", "S  ", 'S', Item.ingotIron));
 					}
 				}
+				else if (name.equals("battery"))
+				{
+					field.set(null, new ItemBattery(name, id));
+					GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(itemBattery), " T ", "TRT", "TCT", 'T', "ingotTin", 'R', Item.redstone, 'C', Item.coal));
+					OreDictionary.registerOre(name, ElectricItemHelper.getUncharged(BasicComponents.itemBattery));
+				}
+				else if (name.equals("infiniteBattery"))
+				{
+					itemInfiniteBattery = new ItemInfiniteBattery(name, id);
+					OreDictionary.registerOre(name, ElectricItemHelper.getUncharged(itemInfiniteBattery));
+
+				}
 				else
 				{
-					field.set(null, new ItemBase(name, id <= 0 ? getNextItemID() : id).setCreativeTab(CreativeTabs.tabMaterials));
+					field.set(null, new ItemBase(name, id).setCreativeTab(CreativeTabs.tabMaterials));
 					Item item = (Item) field.get(null);
 
 					if (name.equals("circuitBasic"))
@@ -321,6 +370,8 @@ public class BasicComponents
 		{
 			Field field = ReflectionHelper.findField(BasicComponents.class, "block" + Character.toUpperCase(name.charAt(0)) + name.substring(1));
 			Block f = (Block) field.get(null);
+			Field idField = ReflectionHelper.findField(BasicComponents.class, "id" + Character.toUpperCase(name.charAt(0)) + name.substring(1));
+			id = id <= 0 ? (Integer) idField.get(null) : id;
 
 			if (f == null)
 			{
@@ -328,7 +379,7 @@ public class BasicComponents
 
 				if (name.equals("copperWire"))
 				{
-					field.set(null, new BlockCopperWire(id <= 0 ? getNextBlockID() : id));
+					field.set(null, new BlockCopperWire(id));
 					GameRegistry.registerBlock((Block) field.get(null), ItemBlockCopperWire.class, name);
 					proxy.registerCopperWireTileEntity();
 
@@ -338,7 +389,7 @@ public class BasicComponents
 				}
 				else if (name.contains("ore"))
 				{
-					field.set(null, new BlockBase(name, id <= 0 ? getNextBlockID() : id));
+					field.set(null, new BlockBase(name, id));
 					Block block = (Block) field.get(null);
 					GameRegistry.registerBlock(block, name);
 
@@ -390,40 +441,25 @@ public class BasicComponents
 		return null;
 	}
 
-	public static ItemStack requireBattery(int id)
+	@Deprecated
+	public static Item requireBattery(int id)
 	{
-		if (itemBattery == null)
-		{
-			BasicComponents.CONFIGURATION.load();
-			itemBattery = new ItemBattery(BasicComponents.CONFIGURATION.getItem("Battery", id <= 0 ? getNextItemID() : id).getInt(id));
-			// Battery
-			GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(itemBattery), " T ", "TRT", "TCT", 'T', "ingotTin", 'R', Item.redstone, 'C', Item.coal));
-			OreDictionary.registerOre("battery", ElectricItemHelper.getUncharged(BasicComponents.itemBattery));
-			BasicComponents.CONFIGURATION.save();
-		}
-
-		return new ItemStack(itemBattery);
+		return requestItem("battery", id);
 	}
 
-	public static ItemStack requireInfiniteBattery(int id)
+	@Deprecated
+	public static Item requireInfiniteBattery(int id)
 	{
-		if (itemInfiniteBattery == null)
-		{
-			BasicComponents.CONFIGURATION.load();
-			itemInfiniteBattery = new ItemInfiniteBattery(BasicComponents.CONFIGURATION.getItem("Infinite Battery", id <= 0 ? getNextItemID() : id).getInt(id));
-			OreDictionary.registerOre("batteryInfinite", ElectricItemHelper.getUncharged(itemInfiniteBattery));
-			BasicComponents.CONFIGURATION.save();
-		}
-
-		return new ItemStack(itemInfiniteBattery);
+		return requestItem("infiniteBattery", id);
 	}
 
 	public static ItemStack requireMachines(int id)
 	{
 		if (blockMachine == null)
 		{
+			id = id <= 0 ? idMachine : id;
 			BasicComponents.CONFIGURATION.load();
-			BasicComponents.blockMachine = new BlockBasicMachine(BasicComponents.CONFIGURATION.getBlock("Basic Machine", id <= 0 ? getNextBlockID() : id).getInt(id), 0);
+			BasicComponents.blockMachine = new BlockBasicMachine(BasicComponents.CONFIGURATION.getBlock("Basic Machine", id).getInt(id), 0);
 			GameRegistry.registerBlock(BasicComponents.blockMachine, ItemBlockBasicMachine.class, "Basic Machine");
 
 			OreDictionary.registerOre("coalGenerator", ((BlockBasicMachine) BasicComponents.blockMachine).getCoalGenerator());
@@ -539,11 +575,10 @@ public class BasicComponents
 		BasicComponents.requestItem("circuitElite", 0);
 
 		BasicComponents.requestItem("motor", 0);
-
 		BasicComponents.requestItem("wrench", 0);
+		BasicComponents.requestItem("battery", 0);
+		BasicComponents.requestItem("infiniteBattery", 0);
 
-		requireBattery(0);
-		requireInfiniteBattery(0);
 		requireMachines(0);
 	}
 

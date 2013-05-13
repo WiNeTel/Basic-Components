@@ -10,10 +10,10 @@ import cpw.mods.fml.relauncher.SideOnly;
 
 public class ItemBattery extends ItemElectric
 {
-	public ItemBattery(int id)
+	public ItemBattery(String name, int id)
 	{
-		super(id);
-		this.setUnlocalizedName(BasicComponents.TEXTURE_NAME_PREFIX + "battery");
+		super(BasicComponents.CONFIGURATION.getItem(name, id).getInt(id));
+		this.setUnlocalizedName(BasicComponents.TEXTURE_NAME_PREFIX + name);
 		this.setCreativeTab(CreativeTabs.tabRedstone);
 	}
 
