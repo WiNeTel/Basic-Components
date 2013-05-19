@@ -338,7 +338,7 @@ public class BasicComponents
 		}
 		catch (Exception e)
 		{
-			FMLLog.severe("Basic Components: Failed to require ingot: " + name);
+			FMLLog.severe("Basic Components: Failed to require item: " + name);
 			e.printStackTrace();
 		}
 
@@ -417,7 +417,7 @@ public class BasicComponents
 		}
 		catch (Exception e)
 		{
-			FMLLog.severe("Basic Components: Failed to require ingot: " + name);
+			FMLLog.severe("Basic Components: Failed to require block: " + name);
 			e.printStackTrace();
 		}
 
